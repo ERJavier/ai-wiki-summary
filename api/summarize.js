@@ -23,9 +23,9 @@ async function queryHuggingFace(data, model) {
   
   function getSummaryParameters(length) {
     const params = {
-      short: { max_length: 100, min_length: 30 },
-      medium: { max_length: 200, min_length: 80 },
-      long: { max_length: 300, min_length: 150 }
+      short: { max_length: 200, min_length: 100 },    // Increased for more detail
+      medium: { max_length: 400, min_length: 200 },   // Increased for comprehensive coverage
+      long: { max_length: 600, min_length: 300 }      // Increased for extensive detail
     };
     
     return params[length] || params.short;
@@ -105,62 +105,81 @@ async function queryHuggingFace(data, model) {
         let promptText;
         
         if (isMultipleArticles) {
-          promptText = `Create a comprehensive, well-structured summary of these Wikipedia articles: ${title}. 
+          promptText = `Create a comprehensive, detailed, and well-structured summary of these Wikipedia articles: ${title}. 
 
-Structure your response with these sections:
-## Overview
-Provide a brief introduction connecting all topics
+Your response must include these sections with substantial detail:
 
-## Key Concepts
-List the main concepts and their definitions
+## Executive Summary
+Write a compelling 2-3 sentence overview that captures the essence and connections between all topics.
 
-## Relationships & Connections
-Explain how these topics relate to each other
+## Core Concepts & Definitions  
+Define each major topic clearly with key characteristics, properties, and distinguishing features. Use bullet points for clarity.
 
-## Important Details
-Include significant facts, dates, people, or processes
+## Historical Context & Background
+Provide important historical information, origins, development timeline, and key figures or events that shaped these topics.
 
-## Significance
-Explain why these topics are important or relevant
+## Key Relationships & Interconnections
+Explain how these topics relate to each other, influence one another, or work together. Include cause-and-effect relationships.
 
-Content to summarize:
+## Important Facts & Details
+List significant statistics, dates, names, processes, or technical details that are crucial for understanding. Use specific examples.
+
+## Current Applications & Relevance
+Describe how these topics are relevant today, their practical applications, and their impact on society or respective fields.
+
+## Significance & Future Implications
+Explain why these topics matter, their broader importance, and potential future developments or trends.
+
+Content to analyze:
 ${truncatedContent}
 
-Please write in clear, accessible language and organize the information logically.`;
+Write in clear, accessible language with specific details, examples, and quantifiable information where available. Each section should be substantial and informative.`;
         } else {
-          promptText = `Create a comprehensive, well-structured summary of this Wikipedia article about ${title}.
+          promptText = `Create a comprehensive, detailed, and well-structured summary of this Wikipedia article about ${title}.
 
-Structure your response with these sections:
-## Overview
-Brief introduction to the topic
+Your response must include these sections with substantial detail:
 
-## Key Points
-Main facts, concepts, or characteristics
+## Executive Summary
+Write a compelling 2-3 sentence overview that captures the essence and importance of this topic.
 
-## Background & Context
-Historical context, origins, or development
+## Core Definition & Key Characteristics
+Clearly define what this topic is, its main properties, features, or components. Use bullet points for key attributes.
 
-## Important Details
-Significant facts, figures, people, or processes mentioned
+## Historical Background & Origins
+Provide historical context, when/how it originated, key developments, and important figures or events in its history.
+
+## Main Categories & Classifications
+If applicable, describe different types, categories, or branches within this topic. Explain distinctions and relationships.
+
+## Important Facts & Statistics  
+List crucial facts, figures, dates, measurements, or data points. Include specific examples and quantifiable information.
+
+## Process & Mechanism (if applicable)
+Explain how something works, its methodology, or step-by-step processes involved.
+
+## Current Applications & Uses
+Describe practical applications, real-world uses, and how this topic impacts daily life or its field.
 
 ## Significance & Impact
-Why this topic is important or its relevance today
+Explain the broader importance, influence on society/field, and why this topic matters today and for the future.
 
-Content to summarize:
+Content to analyze:
 ${truncatedContent}
 
-Please write in clear, accessible language with specific details and examples where relevant.`;
+Write in clear, accessible language with specific details, concrete examples, and quantifiable information. Each section should be informative and substantial.`;
         }
         
         const result = await queryHuggingFace({
           inputs: promptText,
           parameters: {
-            max_length: Math.max(summaryParams.max_length * 2, 400), // Increase for structured content
-            min_length: Math.max(summaryParams.min_length * 1.5, 150),
+            max_length: Math.max(summaryParams.max_length * 2.5, 600), // Significantly increased for more detail
+            min_length: Math.max(summaryParams.min_length * 2, 200),
             do_sample: true,
-            temperature: 0.4,
-            repetition_penalty: 1.2,
-            length_penalty: 1.0
+            temperature: 0.3, // Lower for more focused content
+            repetition_penalty: 1.3, // Higher to avoid repetition
+            length_penalty: 1.1, // Encourage longer, more detailed responses
+            top_p: 0.9,
+            num_beams: 4
           }
         }, model);
   
@@ -171,7 +190,7 @@ Please write in clear, accessible language with specific details and examples wh
           } else if (result[0].generated_text) {
             let generatedText = result[0].generated_text;
             // Clean up the generated text
-            const summaryStart = generatedText.toLowerCase().indexOf('overview');
+            const summaryStart = generatedText.toLowerCase().indexOf('executive summary');
             if (summaryStart !== -1) {
               generatedText = generatedText.substring(summaryStart - 3).trim();
             }
@@ -186,48 +205,180 @@ Please write in clear, accessible language with specific details and examples wh
     }
   
     if (!summary) {
-      // Fallback: create a basic structured summary from the content
-      console.log('All AI models failed, creating fallback structured summary...');
-      summary = createFallbackStructuredSummary(truncatedContent, title, isMultipleArticles);
+      // Enhanced fallback: create a more detailed structured summary from the content
+      console.log('All AI models failed, creating enhanced fallback structured summary...');
+      summary = createEnhancedFallbackSummary(truncatedContent, title, isMultipleArticles);
     }
   
-    // Post-process the summary for better structure
-    summary = enhanceSummaryStructure(summary, title);
+    // Post-process the summary for better structure and detail
+    summary = enhanceAndExpandSummaryStructure(summary, title, truncatedContent);
     
     return summary;
   }
   
-  function createFallbackStructuredSummary(content, title, isMultiple) {
-    const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 20);
-    const topSentences = sentences.slice(0, Math.min(8, sentences.length));
+  function createEnhancedFallbackSummary(content, title, isMultiple) {
+    // Extract key information from content
+    const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 25);
+    const paragraphs = content.split(/\n\s*\n/).filter(p => p.trim().length > 50);
+    
+    // Extract key facts - look for numbers, dates, and specific terms
+    const facts = sentences.filter(s => 
+      /\b\d{4}\b|\b\d+[,.]?\d*\s*(percent|%|million|billion|thousand)|\b(founded|established|created|born|died|invented)\b/i.test(s)
+    ).slice(0, 4);
+    
+    // Extract definitions and key concepts
+    const definitions = sentences.filter(s => 
+      /\bis\s+(a|an|the)|\bdefines?\b|\bknown\s+as\b|\brefers?\s+to\b/i.test(s)
+    ).slice(0, 3);
+    
+    // Extract historical information
+    const historical = sentences.filter(s => 
+      /\b(century|era|period|ancient|medieval|modern|history|historical|originally|first|began|started)\b/i.test(s)
+    ).slice(0, 3);
     
     if (isMultiple) {
-      return `## Overview\n${title.split(', ').join(' and ')} are interconnected topics with significant relevance.\n\n## Key Points\n${topSentences.slice(0, 4).map(s => `• ${s.trim()}.`).join('\n')}\n\n## Important Details\n${topSentences.slice(4, 8).map(s => `• ${s.trim()}.`).join('\n')}\n\n## Significance\nThese topics represent important areas of knowledge with practical applications and historical significance.`;
+      const topics = title.split(', ');
+      return `## Executive Summary
+${topics.join(' and ')} are interconnected subjects that represent significant areas of knowledge with substantial impact on their respective fields and society at large.
+
+## Core Concepts & Definitions
+${definitions.length > 0 ? definitions.map(s => `• ${s.trim()}.`).join('\n') : '• These topics encompass fundamental concepts that are essential for understanding their respective domains.'}
+
+## Historical Context & Background
+${historical.length > 0 ? historical.map(s => `• ${s.trim()}.`).join('\n') : '• These subjects have evolved over time through various historical developments and contributions from numerous scholars and practitioners.'}
+
+## Key Relationships & Interconnections
+• These topics are interconnected through shared principles, methodologies, and applications
+• They influence each other through cross-disciplinary research and practical implementations
+• Understanding one enhances comprehension of the others
+
+## Important Facts & Details
+${facts.length > 0 ? facts.map(s => `• ${s.trim()}.`).join('\n') : sentences.slice(0, 4).map(s => `• ${s.trim()}.`).join('\n')}
+
+## Current Applications & Relevance
+• These topics have widespread applications in modern society and continue to influence current practices
+• They play crucial roles in technological advancement, education, and professional development
+• Their principles are applied across multiple industries and academic disciplines
+
+## Significance & Future Implications
+These interconnected topics represent essential knowledge areas that continue to evolve and shape our understanding of complex systems, driving innovation and informing future developments in their respective fields.`;
     } else {
-      return `## Overview\n${title} is a significant topic with multiple important aspects.\n\n## Key Points\n${topSentences.slice(0, 3).map(s => `• ${s.trim()}.`).join('\n')}\n\n## Background & Context\n${topSentences.slice(3, 5).map(s => `• ${s.trim()}.`).join('\n')}\n\n## Important Details\n${topSentences.slice(5, 8).map(s => `• ${s.trim()}.`).join('\n')}\n\n## Significance & Impact\nThis topic has considerable importance in its field and continues to be relevant today.`;
+      return `## Executive Summary
+${title} represents a significant and multifaceted topic that plays an important role in its field and has substantial relevance to contemporary understanding and applications.
+
+## Core Definition & Key Characteristics
+${definitions.length > 0 ? definitions.map(s => `• ${s.trim()}.`).join('\n') : `• ${title} encompasses several key characteristics and properties that distinguish it within its domain\n• It involves specific principles and methodologies that are fundamental to its understanding`}
+
+## Historical Background & Origins
+${historical.length > 0 ? historical.map(s => `• ${s.trim()}.`).join('\n') : '• This topic has developed through historical evolution and contributions from various scholars and practitioners\n• Its foundations were established through systematic study and practical application over time'}
+
+## Main Categories & Classifications
+• This topic can be understood through various perspectives and classifications
+• Different approaches and methodologies contribute to its comprehensive understanding
+• Multiple sub-areas and specializations exist within this broader domain
+
+## Important Facts & Statistics
+${facts.length > 0 ? facts.map(s => `• ${s.trim()}.`).join('\n') : sentences.slice(0, 4).map(s => `• ${s.trim()}.`).join('\n')}
+
+## Current Applications & Uses
+• This topic has practical applications in multiple contexts and industries
+• It influences contemporary practices and technological developments
+• Professional and academic communities actively utilize its principles and methodologies
+
+## Significance & Impact
+${title} continues to be highly relevant due to its fundamental importance, practical applications, and ongoing influence on related fields. Its principles and insights contribute to advancing knowledge and addressing contemporary challenges in its domain.`;
     }
   }
   
-  function enhanceSummaryStructure(summary, title) {
+  function enhanceAndExpandSummaryStructure(summary, title, originalContent) {
     // Clean up the summary
     summary = summary.replace(/^\s*Summary:?\s*/i, '').trim();
     
-    // Ensure proper section formatting
-    summary = summary.replace(/^([A-Z][A-Za-z\s&]+)$/gm, '## $1');
+    // Ensure proper section formatting with better patterns
+    summary = summary.replace(/^([A-Z][A-Za-z\s&,]+)[:.]?\s*$/gm, '## $1');
     summary = summary.replace(/^(\*\*[^*]+\*\*)/gm, '## $1');
+    summary = summary.replace(/^#{1,2}\s*([^#\n]+)/gm, '## $1');
     
-    // Convert bullet points to proper format
-    summary = summary.replace(/^[-*•]\s*/gm, '• ');
+    // Convert various bullet point formats to consistent format
+    summary = summary.replace(/^[-*•·]\s*/gm, '• ');
+    summary = summary.replace(/^\d+\.\s*/gm, '• ');
     
-    // Ensure paragraphs are properly separated
+    // Improve paragraph and section spacing
     summary = summary.replace(/\n\n\n+/g, '\n\n');
+    summary = summary.replace(/^##\s*(.+)\n([^#•])/gm, '## $1\n\n$2');
     
-    // Add title if not present
-    if (!summary.includes('##') && !summary.includes(title)) {
-      summary = `## Overview\n${summary}`;
+    // Ensure minimum content standards for each section
+    const sections = summary.split(/^## /gm).filter(s => s.trim());
+    const enhancedSections = [];
+    
+    for (let section of sections) {
+      const lines = section.split('\n').filter(l => l.trim());
+      if (lines.length === 0) continue;
+      
+      const sectionTitle = lines[0].trim();
+      const sectionContent = lines.slice(1).join('\n').trim();
+      
+      // If section is too short, try to enhance it
+      if (sectionContent.length < 50) {
+        const enhancedContent = enhanceSectionContent(sectionTitle, sectionContent, originalContent, title);
+        enhancedSections.push(`## ${sectionTitle}\n\n${enhancedContent}`);
+      } else {
+        enhancedSections.push(`## ${sectionTitle}\n\n${sectionContent}`);
+      }
     }
     
+    // If no sections found, create basic structure
+    if (enhancedSections.length === 0) {
+      summary = `## Executive Summary\n\n${summary}`;
+    } else {
+      summary = enhancedSections.join('\n\n');
+    }
+    
+    // Final cleanup
+    summary = summary.replace(/\n{3,}/g, '\n\n');
+    summary = summary.replace(/•\s*•/g, '•');
+    
     return summary;
+  }
+  
+  function enhanceSectionContent(sectionTitle, content, originalContent, title) {
+    // If content is very minimal, try to extract relevant information from original content
+    if (!content || content.length < 20) {
+      const titleLower = sectionTitle.toLowerCase();
+      const sentences = originalContent.split(/[.!?]+/).filter(s => s.trim().length > 30);
+      
+      let relevantSentences = [];
+      
+      if (titleLower.includes('executive') || titleLower.includes('summary') || titleLower.includes('overview')) {
+        relevantSentences = sentences.slice(0, 2);
+      } else if (titleLower.includes('historical') || titleLower.includes('background') || titleLower.includes('origin')) {
+        relevantSentences = sentences.filter(s => 
+          /\b(century|era|period|ancient|medieval|modern|history|historical|originally|first|began|started|founded|established|created)\b/i.test(s)
+        ).slice(0, 2);
+      } else if (titleLower.includes('fact') || titleLower.includes('statistic') || titleLower.includes('detail')) {
+        relevantSentences = sentences.filter(s => 
+          /\b\d{4}\b|\b\d+[,.]?\d*\s*(percent|%|million|billion|thousand|meters?|feet|miles|kg|pounds)\b/i.test(s)
+        ).slice(0, 3);
+      } else if (titleLower.includes('definition') || titleLower.includes('concept') || titleLower.includes('characteristic')) {
+        relevantSentences = sentences.filter(s => 
+          /\bis\s+(a|an|the)|\bdefines?\b|\bknown\s+as\b|\brefers?\s+to\b|\bcharacterized\s+by\b/i.test(s)
+        ).slice(0, 2);
+      } else if (titleLower.includes('application') || titleLower.includes('use') || titleLower.includes('relevance')) {
+        relevantSentences = sentences.filter(s => 
+          /\b(used|applied|utilize|employ|practice|implementation|application|relevant|important|significant)\b/i.test(s)
+        ).slice(0, 2);
+      } else {
+        relevantSentences = sentences.slice(0, 2);
+      }
+      
+      if (relevantSentences.length > 0) {
+        return relevantSentences.map(s => `• ${s.trim()}.`).join('\n');
+      } else {
+        return `• This section provides important information about ${title} related to ${sectionTitle.toLowerCase()}.`;
+      }
+    }
+    
+    return content;
   }
   
   async function handleMultipleUrls(req, res) {

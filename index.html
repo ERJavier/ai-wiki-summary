@@ -91,19 +91,19 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Summary Length</label>
+                        <label class="form-label">Summary Detail Level</label>
                         <div class="summary-options">
                             <div class="option-card selected" data-length="short">
-                                <h4>Short</h4>
-                                <p>50-100 words</p>
+                                <h4>Comprehensive</h4>
+                                <p>100-200 words • Structured sections • Key insights</p>
                             </div>
                             <div class="option-card" data-length="medium">
-                                <h4>Medium</h4>
-                                <p>100-200 words</p>
+                                <h4>Detailed</h4>
+                                <p>200-400 words • In-depth analysis • Rich context</p>
                             </div>
                             <div class="option-card" data-length="long">
-                                <h4>Long</h4>
-                                <p>200-300 words</p>
+                                <h4>Extensive</h4>
+                                <p>300-600 words • Complete coverage • All perspectives</p>
                             </div>
                         </div>
                     </div>
@@ -571,16 +571,21 @@
         function formatStructuredSummary(summary) {
             // Convert markdown-style headers and formatting to HTML
             let formattedSummary = summary
-                // Convert headers
-                .replace(/^## (.+)$/gm, '<h3 class="summary-section-title">$1</h3>')
+                // Convert headers with better section detection
+                .replace(/^## (.+)$/gm, (match, title) => {
+                    const icon = getSectionIcon(title);
+                    return `<h3 class="summary-section-title" data-section="${title.toLowerCase().replace(/\s+/g, '-')}">${icon} ${title}</h3>`;
+                })
                 // Convert bullet points
                 .replace(/^• (.+)$/gm, '<li>$1</li>')
+                // Convert numbered lists
+                .replace(/^\d+\.\s+(.+)$/gm, '<li>$1</li>')
                 // Convert paragraphs
                 .replace(/\n\n/g, '</p><p>')
                 .replace(/^(?!<[h|l])/gm, '<p>')
                 .replace(/(?<![>])$/gm, '</p>');
             
-            // Wrap consecutive list items in ul tags
+            // Wrap consecutive list items in ul tags with enhanced detection
             formattedSummary = formattedSummary.replace(/(<li>.*?<\/li>)(?:\s*<\/p>\s*<p>\s*(<li>.*?<\/li>))*/gs, (match) => {
                 const listItems = match.match(/<li>.*?<\/li>/g) || [];
                 return `<ul class="summary-list">${listItems.join('')}</ul>`;
@@ -594,9 +599,42 @@
                 .replace(/<p>\s*<ul/g, '<ul')
                 .replace(/<\/ul>\s*<\/p>/g, '</ul>')
                 .replace(/^\s*<\/p>/, '')
-                .replace(/<p>\s*$/, '');
+                .replace(/<p>\s*$/, '')
+                // Remove duplicate empty tags
+                .replace(/(<p>\s*<\/p>)+/g, '')
+                .replace(/\n{3,}/g, '\n\n');
             
             return `<div class="structured-summary">${formattedSummary}</div>`;
+        }
+
+        function getSectionIcon(title) {
+            const titleLower = title.toLowerCase();
+            
+            if (titleLower.includes('executive') || titleLower.includes('summary') || titleLower.includes('overview')) {
+                return '📋';
+            } else if (titleLower.includes('definition') || titleLower.includes('concept') || titleLower.includes('characteristic')) {
+                return '🔍';
+            } else if (titleLower.includes('historical') || titleLower.includes('background') || titleLower.includes('origin')) {
+                return '🏛️';
+            } else if (titleLower.includes('facts') || titleLower.includes('statistics') || titleLower.includes('detail')) {
+                return '📊';
+            } else if (titleLower.includes('application') || titleLower.includes('uses') || titleLower.includes('relevance')) {
+                return '⚙️';
+            } else if (titleLower.includes('significance') || titleLower.includes('impact')) {
+                return '🎯';
+            } else if (titleLower.includes('relationship') || titleLower.includes('connection') || titleLower.includes('interconnection')) {
+                return '🔗';
+            } else if (titleLower.includes('categories') || titleLower.includes('classification') || titleLower.includes('types')) {
+                return '📚';
+            } else if (titleLower.includes('process') || titleLower.includes('mechanism') || titleLower.includes('methodology')) {
+                return '⚙️';
+            } else if (titleLower.includes('current') || titleLower.includes('modern') || titleLower.includes('today')) {
+                return '🌟';
+            } else if (titleLower.includes('future') || titleLower.includes('implications') || titleLower.includes('trends')) {
+                return '🔮';
+            } else {
+                return '📝';
+            }
         }
 
         function copySummary() {

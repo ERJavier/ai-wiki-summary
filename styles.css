@@ -605,19 +605,25 @@ body {
     margin-bottom: var(--spacing-lg);
 }
 
-/* Structured Summary Styles */
+/* Enhanced Structured Summary Styles */
 .structured-summary {
     max-width: none;
+    font-size: 1rem;
+    line-height: 1.7;
 }
 
 .structured-summary h3.summary-section-title {
     color: var(--primary-700);
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin: var(--spacing-xl) 0 var(--spacing-md) 0;
-    padding-bottom: var(--spacing-sm);
-    border-bottom: 2px solid var(--primary-200);
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin: var(--spacing-xl) 0 var(--spacing-lg) 0;
+    padding: var(--spacing-lg) var(--spacing-xl);
+    background: linear-gradient(135deg, var(--primary-50), var(--primary-100));
+    border-left: 4px solid var(--primary-500);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
     position: relative;
+    transition: all 0.3s ease;
 }
 
 .structured-summary h3.summary-section-title:first-child {
@@ -625,50 +631,129 @@ body {
 }
 
 .structured-summary h3.summary-section-title::before {
+    display: inline-block;
+    margin-right: var(--spacing-md);
+    font-size: 1.2em;
+}
+
+.structured-summary h3.summary-section-title::after {
     content: '';
     position: absolute;
-    left: 0;
-    bottom: -2px;
-    width: 40px;
+    right: var(--spacing-xl);
+    top: 50%;
+    transform: translateY(-50%);
+    width: 24px;
     height: 2px;
-    background: var(--primary-500);
+    background: var(--primary-400);
+    border-radius: 1px;
+}
+
+.structured-summary h3.summary-section-title:hover {
+    background: linear-gradient(135deg, var(--primary-100), var(--primary-200));
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-lg);
 }
 
 .structured-summary p {
-    margin-bottom: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
     line-height: 1.8;
     color: var(--gray-700);
+    font-size: 1.05rem;
+    text-align: justify;
+    padding: 0 var(--spacing-sm);
 }
 
 .structured-summary ul.summary-list {
-    margin: var(--spacing-md) 0;
-    padding-left: 0;
+    margin: var(--spacing-lg) 0;
+    padding: var(--spacing-lg);
     list-style: none;
+    background: var(--gray-50);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-sm);
 }
 
 .structured-summary ul.summary-list li {
     position: relative;
-    padding: var(--spacing-sm) 0 var(--spacing-sm) var(--spacing-xl);
-    margin-bottom: var(--spacing-sm);
+    padding: var(--spacing-md) var(--spacing-lg) var(--spacing-md) var(--spacing-2xl);
+    margin-bottom: var(--spacing-md);
     background: white;
     border-radius: var(--radius-md);
-    border-left: 3px solid var(--primary-200);
+    border-left: 3px solid var(--primary-300);
     box-shadow: var(--shadow-sm);
+    transition: all 0.3s ease;
+    font-size: 1.02rem;
+    line-height: 1.6;
+    color: var(--gray-700);
+}
+
+.structured-summary ul.summary-list li:last-child {
+    margin-bottom: 0;
 }
 
 .structured-summary ul.summary-list li::before {
-    content: '•';
+    content: '▶';
     position: absolute;
-    left: var(--spacing-md);
+    left: var(--spacing-lg);
+    top: var(--spacing-md);
     color: var(--primary-500);
     font-weight: 600;
-    font-size: 1.2em;
+    font-size: 0.9em;
+    transition: all 0.3s ease;
 }
 
 .structured-summary ul.summary-list li:hover {
     border-left-color: var(--primary-500);
-    transform: translateX(2px);
-    transition: all 0.2s ease;
+    transform: translateX(4px);
+    box-shadow: var(--shadow-md);
+    background: var(--primary-50);
+}
+
+.structured-summary ul.summary-list li:hover::before {
+    color: var(--primary-600);
+    transform: rotate(90deg);
+}
+
+/* Section-specific styling based on data attributes */
+.structured-summary h3.summary-section-title[data-section*="executive"]::before,
+.structured-summary h3.summary-section-title[data-section*="summary"]::before,
+.structured-summary h3.summary-section-title[data-section*="overview"]::before {
+    content: '📋' !important;
+}
+
+.structured-summary h3.summary-section-title[data-section*="definition"]::before,
+.structured-summary h3.summary-section-title[data-section*="concept"]::before,
+.structured-summary h3.summary-section-title[data-section*="characteristic"]::before {
+    content: '🔍' !important;
+}
+
+.structured-summary h3.summary-section-title[data-section*="historical"]::before,
+.structured-summary h3.summary-section-title[data-section*="background"]::before,
+.structured-summary h3.summary-section-title[data-section*="origin"]::before {
+    content: '🏛️' !important;
+}
+
+.structured-summary h3.summary-section-title[data-section*="facts"]::before,
+.structured-summary h3.summary-section-title[data-section*="statistics"]::before,
+.structured-summary h3.summary-section-title[data-section*="detail"]::before {
+    content: '📊' !important;
+}
+
+.structured-summary h3.summary-section-title[data-section*="application"]::before,
+.structured-summary h3.summary-section-title[data-section*="uses"]::before,
+.structured-summary h3.summary-section-title[data-section*="relevance"]::before {
+    content: '⚙️' !important;
+}
+
+.structured-summary h3.summary-section-title[data-section*="significance"]::before,
+.structured-summary h3.summary-section-title[data-section*="impact"]::before {
+    content: '🎯' !important;
+}
+
+.structured-summary h3.summary-section-title[data-section*="relationship"]::before,
+.structured-summary h3.summary-section-title[data-section*="connection"]::before,
+.structured-summary h3.summary-section-title[data-section*="interconnection"]::before {
+    content: '🔗' !important;
 }
 
 /* Source Articles Section */
