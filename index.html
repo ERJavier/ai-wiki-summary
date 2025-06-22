@@ -91,19 +91,19 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Summary Detail Level</label>
+                        <label class="form-label">Study Guide Detail Level</label>
                         <div class="summary-options">
                             <div class="option-card selected" data-length="short">
-                                <h4>Comprehensive</h4>
-                                <p>100-200 words • Structured sections • Key insights</p>
+                                <h4>🎓 Essential Study Guide</h4>
+                                <p>Learning objectives • Key terms • Review questions</p>
                             </div>
                             <div class="option-card" data-length="medium">
-                                <h4>Detailed</h4>
-                                <p>200-400 words • In-depth analysis • Rich context</p>
+                                <h4>📚 Comprehensive Study Guide</h4>
+                                <p>Detailed explanations • Rich context • Study tips</p>
                             </div>
                             <div class="option-card" data-length="long">
-                                <h4>Extensive</h4>
-                                <p>300-600 words • Complete coverage • All perspectives</p>
+                                <h4>🎯 Complete Study Guide</h4>
+                                <p>Full coverage • Multiple examples • Exam preparation</p>
                             </div>
                         </div>
                     </div>
@@ -610,22 +610,28 @@
         function getSectionIcon(title) {
             const titleLower = title.toLowerCase();
             
-            if (titleLower.includes('executive') || titleLower.includes('summary') || titleLower.includes('overview')) {
-                return '📋';
-            } else if (titleLower.includes('definition') || titleLower.includes('concept') || titleLower.includes('characteristic')) {
-                return '🔍';
-            } else if (titleLower.includes('historical') || titleLower.includes('background') || titleLower.includes('origin')) {
+            if (titleLower.includes('learning objectives') || titleLower.includes('objectives')) {
+                return '🎯';
+            } else if (titleLower.includes('key terms') || titleLower.includes('definitions') || titleLower.includes('vocabulary')) {
+                return '📚';
+            } else if (titleLower.includes('historical') || titleLower.includes('background') || titleLower.includes('timeline')) {
                 return '🏛️';
-            } else if (titleLower.includes('facts') || titleLower.includes('statistics') || titleLower.includes('detail')) {
+            } else if (titleLower.includes('core concepts') || titleLower.includes('concepts explained') || titleLower.includes('explained')) {
+                return '🔍';
+            } else if (titleLower.includes('connections') || titleLower.includes('relationships') || titleLower.includes('interconnection')) {
+                return '🔗';
+            } else if (titleLower.includes('facts') || titleLower.includes('data') || titleLower.includes('statistics')) {
                 return '📊';
-            } else if (titleLower.includes('application') || titleLower.includes('uses') || titleLower.includes('relevance')) {
-                return '⚙️';
+            } else if (titleLower.includes('applications') || titleLower.includes('real-world') || titleLower.includes('uses')) {
+                return '💡';
             } else if (titleLower.includes('significance') || titleLower.includes('impact')) {
                 return '🎯';
-            } else if (titleLower.includes('relationship') || titleLower.includes('connection') || titleLower.includes('interconnection')) {
-                return '🔗';
+            } else if (titleLower.includes('study tips') || titleLower.includes('takeaways') || titleLower.includes('key takeaways')) {
+                return '🎓';
+            } else if (titleLower.includes('review questions') || titleLower.includes('questions')) {
+                return '❓';
             } else if (titleLower.includes('categories') || titleLower.includes('classification') || titleLower.includes('types')) {
-                return '📚';
+                return '📂';
             } else if (titleLower.includes('process') || titleLower.includes('mechanism') || titleLower.includes('methodology')) {
                 return '⚙️';
             } else if (titleLower.includes('current') || titleLower.includes('modern') || titleLower.includes('today')) {

@@ -714,35 +714,57 @@ body {
     transform: rotate(90deg);
 }
 
-/* Section-specific styling based on data attributes */
-.structured-summary h3.summary-section-title[data-section*="executive"]::before,
-.structured-summary h3.summary-section-title[data-section*="summary"]::before,
-.structured-summary h3.summary-section-title[data-section*="overview"]::before {
-    content: '📋' !important;
+/* Study Guide Section-specific styling */
+.structured-summary h3.summary-section-title[data-section*="learning-objectives"]::before,
+.structured-summary h3.summary-section-title[data-section*="objectives"]::before {
+    content: '🎯' !important;
 }
 
-.structured-summary h3.summary-section-title[data-section*="definition"]::before,
-.structured-summary h3.summary-section-title[data-section*="concept"]::before,
-.structured-summary h3.summary-section-title[data-section*="characteristic"]::before {
-    content: '🔍' !important;
+.structured-summary h3.summary-section-title[data-section*="key-terms"]::before,
+.structured-summary h3.summary-section-title[data-section*="definitions"]::before,
+.structured-summary h3.summary-section-title[data-section*="vocabulary"]::before {
+    content: '📚' !important;
 }
 
 .structured-summary h3.summary-section-title[data-section*="historical"]::before,
 .structured-summary h3.summary-section-title[data-section*="background"]::before,
-.structured-summary h3.summary-section-title[data-section*="origin"]::before {
+.structured-summary h3.summary-section-title[data-section*="timeline"]::before {
     content: '🏛️' !important;
 }
 
+.structured-summary h3.summary-section-title[data-section*="core-concepts"]::before,
+.structured-summary h3.summary-section-title[data-section*="concepts-explained"]::before,
+.structured-summary h3.summary-section-title[data-section*="explained"]::before {
+    content: '🔍' !important;
+}
+
+.structured-summary h3.summary-section-title[data-section*="connections"]::before,
+.structured-summary h3.summary-section-title[data-section*="relationships"]::before,
+.structured-summary h3.summary-section-title[data-section*="interconnection"]::before {
+    content: '🔗' !important;
+}
+
 .structured-summary h3.summary-section-title[data-section*="facts"]::before,
-.structured-summary h3.summary-section-title[data-section*="statistics"]::before,
-.structured-summary h3.summary-section-title[data-section*="detail"]::before {
+.structured-summary h3.summary-section-title[data-section*="data"]::before,
+.structured-summary h3.summary-section-title[data-section*="statistics"]::before {
     content: '📊' !important;
 }
 
-.structured-summary h3.summary-section-title[data-section*="application"]::before,
-.structured-summary h3.summary-section-title[data-section*="uses"]::before,
-.structured-summary h3.summary-section-title[data-section*="relevance"]::before {
-    content: '⚙️' !important;
+.structured-summary h3.summary-section-title[data-section*="applications"]::before,
+.structured-summary h3.summary-section-title[data-section*="real-world"]::before,
+.structured-summary h3.summary-section-title[data-section*="uses"]::before {
+    content: '💡' !important;
+}
+
+.structured-summary h3.summary-section-title[data-section*="study-tips"]::before,
+.structured-summary h3.summary-section-title[data-section*="takeaways"]::before,
+.structured-summary h3.summary-section-title[data-section*="key-takeaways"]::before {
+    content: '🎓' !important;
+}
+
+.structured-summary h3.summary-section-title[data-section*="review-questions"]::before,
+.structured-summary h3.summary-section-title[data-section*="questions"]::before {
+    content: '❓' !important;
 }
 
 .structured-summary h3.summary-section-title[data-section*="significance"]::before,
@@ -750,10 +772,25 @@ body {
     content: '🎯' !important;
 }
 
-.structured-summary h3.summary-section-title[data-section*="relationship"]::before,
-.structured-summary h3.summary-section-title[data-section*="connection"]::before,
-.structured-summary h3.summary-section-title[data-section*="interconnection"]::before {
-    content: '🔗' !important;
+/* Special styling for study guide sections */
+.structured-summary h3.summary-section-title[data-section*="learning-objectives"] {
+    background: linear-gradient(135deg, var(--success-50), var(--success-100));
+    border-left-color: var(--success-500);
+}
+
+.structured-summary h3.summary-section-title[data-section*="key-terms"] {
+    background: linear-gradient(135deg, var(--primary-50), var(--primary-100));
+    border-left-color: var(--primary-500);
+}
+
+.structured-summary h3.summary-section-title[data-section*="review-questions"] {
+    background: linear-gradient(135deg, var(--warning-50), var(--warning-100));
+    border-left-color: var(--warning-500);
+}
+
+.structured-summary h3.summary-section-title[data-section*="study-tips"] {
+    background: linear-gradient(135deg, var(--success-50), var(--success-100));
+    border-left-color: var(--success-500);
 }
 
 /* Source Articles Section */

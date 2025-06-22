@@ -100,86 +100,94 @@ async function queryHuggingFace(data, model) {
   
     for (const model of models) {
       try {
-        // Create enhanced prompts for better structured summaries
+        // Create study guide-focused prompts
         const isMultipleArticles = title.includes(',');
         let promptText;
         
         if (isMultipleArticles) {
-          promptText = `Create a comprehensive, detailed, and well-structured summary of these Wikipedia articles: ${title}. 
+          promptText = `Create a comprehensive STUDY GUIDE for these Wikipedia topics: ${title}. Format this as an educational study resource with these sections:
 
-Your response must include these sections with substantial detail:
+## 🎯 Learning Objectives
+List 3-4 clear learning goals - what students should understand after studying these topics.
 
-## Executive Summary
-Write a compelling 2-3 sentence overview that captures the essence and connections between all topics.
+## 📚 Key Terms & Definitions
+Define the most important terms, concepts, and vocabulary. Use bullet points with term: definition format.
 
-## Core Concepts & Definitions  
-Define each major topic clearly with key characteristics, properties, and distinguishing features. Use bullet points for clarity.
+## 🏛️ Historical Context & Timeline
+Present important dates, periods, developments, and key figures in chronological order where relevant.
 
-## Historical Context & Background
-Provide important historical information, origins, development timeline, and key figures or events that shaped these topics.
+## 🔍 Core Concepts Explained
+Break down the main ideas into digestible explanations. Use examples and analogies where helpful.
 
-## Key Relationships & Interconnections
-Explain how these topics relate to each other, influence one another, or work together. Include cause-and-effect relationships.
+## 🔗 Connections & Relationships
+Explain how these topics relate to each other and to broader themes. Include cause-and-effect relationships.
 
-## Important Facts & Details
-List significant statistics, dates, names, processes, or technical details that are crucial for understanding. Use specific examples.
+## 📊 Important Facts & Data
+List crucial statistics, measurements, dates, and quantifiable information that students should memorize.
 
-## Current Applications & Relevance
-Describe how these topics are relevant today, their practical applications, and their impact on society or respective fields.
+## 💡 Real-World Applications
+Describe practical uses, current examples, and how these topics apply in daily life or professional contexts.
 
-## Significance & Future Implications
-Explain why these topics matter, their broader importance, and potential future developments or trends.
+## 🎓 Study Tips & Key Takeaways
+Provide memorable insights, patterns to remember, and the most important points for exam preparation.
+
+## ❓ Review Questions
+Suggest 2-3 study questions students should be able to answer after learning this material.
 
 Content to analyze:
 ${truncatedContent}
 
-Write in clear, accessible language with specific details, examples, and quantifiable information where available. Each section should be substantial and informative.`;
+Write in clear, educational language suitable for studying. Use specific examples, memorable details, and structure information for easy review and retention.`;
         } else {
-          promptText = `Create a comprehensive, detailed, and well-structured summary of this Wikipedia article about ${title}.
+          promptText = `Create a comprehensive STUDY GUIDE for this Wikipedia topic: ${title}. Format this as an educational study resource with these sections:
 
-Your response must include these sections with substantial detail:
+## 🎯 Learning Objectives
+List 3-4 clear learning goals - what students should understand after studying this topic.
 
-## Executive Summary
-Write a compelling 2-3 sentence overview that captures the essence and importance of this topic.
+## 📚 Key Terms & Definitions
+Define the most important terms and concepts. Present as: Term: Clear, concise definition.
 
-## Core Definition & Key Characteristics
-Clearly define what this topic is, its main properties, features, or components. Use bullet points for key attributes.
+## 🏛️ Historical Background
+Present the origin, development, and key historical milestones. Include important dates and figures.
 
-## Historical Background & Origins
-Provide historical context, when/how it originated, key developments, and important figures or events in its history.
+## 🔍 Core Concepts Explained
+Break down the main ideas into clear, understandable explanations. Use examples and analogies.
 
-## Main Categories & Classifications
-If applicable, describe different types, categories, or branches within this topic. Explain distinctions and relationships.
+## 📂 Categories & Classifications
+If applicable, organize different types, branches, or classifications within this topic.
 
-## Important Facts & Statistics  
-List crucial facts, figures, dates, measurements, or data points. Include specific examples and quantifiable information.
+## 📊 Important Facts & Data
+List crucial statistics, dates, measurements, and quantifiable information students should know.
 
-## Process & Mechanism (if applicable)
-Explain how something works, its methodology, or step-by-step processes involved.
+## 💡 Real-World Applications
+Describe how this topic is used today, with specific examples and practical applications.
 
-## Current Applications & Uses
-Describe practical applications, real-world uses, and how this topic impacts daily life or its field.
+## 🎯 Significance & Impact
+Explain why this topic is important and its broader impact on society, science, or culture.
 
-## Significance & Impact
-Explain the broader importance, influence on society/field, and why this topic matters today and for the future.
+## 🎓 Study Tips & Key Takeaways
+Provide the most important points to remember and effective ways to study this material.
+
+## ❓ Review Questions
+Suggest 3-4 study questions students should be able to answer to demonstrate understanding.
 
 Content to analyze:
 ${truncatedContent}
 
-Write in clear, accessible language with specific details, concrete examples, and quantifiable information. Each section should be informative and substantial.`;
+Write in clear, educational language perfect for studying. Include memorable details, specific examples, and organize information for easy review and retention.`;
         }
         
         const result = await queryHuggingFace({
           inputs: promptText,
           parameters: {
-            max_length: Math.max(summaryParams.max_length * 2.5, 600), // Significantly increased for more detail
-            min_length: Math.max(summaryParams.min_length * 2, 200),
+            max_length: Math.max(summaryParams.max_length * 3, 700), // Increased for study guide format
+            min_length: Math.max(summaryParams.min_length * 2.5, 250),
             do_sample: true,
-            temperature: 0.3, // Lower for more focused content
-            repetition_penalty: 1.3, // Higher to avoid repetition
-            length_penalty: 1.1, // Encourage longer, more detailed responses
-            top_p: 0.9,
-            num_beams: 4
+            temperature: 0.25, // Lower for more focused, educational content
+            repetition_penalty: 1.4, // Higher to avoid repetition
+            length_penalty: 1.2, // Encourage comprehensive responses
+            top_p: 0.85,
+            num_beams: 5
           }
         }, model);
   
@@ -190,9 +198,9 @@ Write in clear, accessible language with specific details, concrete examples, an
           } else if (result[0].generated_text) {
             let generatedText = result[0].generated_text;
             // Clean up the generated text
-            const summaryStart = generatedText.toLowerCase().indexOf('executive summary');
+            const summaryStart = generatedText.toLowerCase().indexOf('learning objectives');
             if (summaryStart !== -1) {
-              generatedText = generatedText.substring(summaryStart - 3).trim();
+              generatedText = generatedText.substring(summaryStart - 5).trim();
             }
             summary = generatedText;
             break;
@@ -205,92 +213,124 @@ Write in clear, accessible language with specific details, concrete examples, an
     }
   
     if (!summary) {
-      // Enhanced fallback: create a more detailed structured summary from the content
-      console.log('All AI models failed, creating enhanced fallback structured summary...');
-      summary = createEnhancedFallbackSummary(truncatedContent, title, isMultipleArticles);
+      // Enhanced fallback: create a study guide structured summary from the content
+      console.log('All AI models failed, creating study guide fallback summary...');
+      summary = createStudyGuideFallback(truncatedContent, title, isMultipleArticles);
     }
   
-    // Post-process the summary for better structure and detail
-    summary = enhanceAndExpandSummaryStructure(summary, title, truncatedContent);
+    // Post-process the summary for better study guide structure
+    summary = enhanceStudyGuideStructure(summary, title, truncatedContent);
     
     return summary;
   }
   
-  function createEnhancedFallbackSummary(content, title, isMultiple) {
-    // Extract key information from content
-    const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 25);
-    const paragraphs = content.split(/\n\s*\n/).filter(p => p.trim().length > 50);
-    
-    // Extract key facts - look for numbers, dates, and specific terms
-    const facts = sentences.filter(s => 
-      /\b\d{4}\b|\b\d+[,.]?\d*\s*(percent|%|million|billion|thousand)|\b(founded|established|created|born|died|invented)\b/i.test(s)
-    ).slice(0, 4);
-    
-    // Extract definitions and key concepts
-    const definitions = sentences.filter(s => 
-      /\bis\s+(a|an|the)|\bdefines?\b|\bknown\s+as\b|\brefers?\s+to\b/i.test(s)
-    ).slice(0, 3);
-    
-    // Extract historical information
-    const historical = sentences.filter(s => 
-      /\b(century|era|period|ancient|medieval|modern|history|historical|originally|first|began|started)\b/i.test(s)
-    ).slice(0, 3);
-    
-    if (isMultiple) {
-      const topics = title.split(', ');
-      return `## Executive Summary
-${topics.join(' and ')} are interconnected subjects that represent significant areas of knowledge with substantial impact on their respective fields and society at large.
+     function createStudyGuideFallback(content, title, isMultiple) {
+     // Extract key information from content
+     const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 25);
+     const paragraphs = content.split(/\n\s*\n/).filter(p => p.trim().length > 50);
+     
+     // Extract key facts - look for numbers, dates, and specific terms
+     const facts = sentences.filter(s => 
+       /\b\d{4}\b|\b\d+[,.]?\d*\s*(percent|%|million|billion|thousand)|\b(founded|established|created|born|died|invented)\b/i.test(s)
+     ).slice(0, 4);
+     
+     // Extract definitions and key concepts
+     const definitions = sentences.filter(s => 
+       /\bis\s+(a|an|the)|\bdefines?\b|\bknown\s+as\b|\brefers?\s+to\b/i.test(s)
+     ).slice(0, 3);
+     
+     // Extract historical information
+     const historical = sentences.filter(s => 
+       /\b(century|era|period|ancient|medieval|modern|history|historical|originally|first|began|started)\b/i.test(s)
+     ).slice(0, 3);
+     
+     if (isMultiple) {
+       const topics = title.split(', ');
+       return `## 🎯 Learning Objectives
+• Understand the core concepts and principles of ${topics.join(' and ')}
+• Identify the key relationships and connections between these topics
+• Analyze the historical development and current applications
+• Evaluate the significance and impact in their respective fields
 
-## Core Concepts & Definitions
-${definitions.length > 0 ? definitions.map(s => `• ${s.trim()}.`).join('\n') : '• These topics encompass fundamental concepts that are essential for understanding their respective domains.'}
+## 📚 Key Terms & Definitions
+${definitions.length > 0 ? definitions.map(s => `• ${extractKeyTerm(s)}: ${s.trim()}`).join('\n') : '• These topics encompass fundamental concepts that are essential for understanding their respective domains'}
 
-## Historical Context & Background
-${historical.length > 0 ? historical.map(s => `• ${s.trim()}.`).join('\n') : '• These subjects have evolved over time through various historical developments and contributions from numerous scholars and practitioners.'}
+## 🏛️ Historical Context & Timeline
+${historical.length > 0 ? historical.map(s => `• ${s.trim()}`).join('\n') : '• These subjects have evolved over time through various historical developments and contributions from numerous scholars and practitioners'}
 
-## Key Relationships & Interconnections
+## 🔍 Core Concepts Explained
 • These topics are interconnected through shared principles, methodologies, and applications
 • They influence each other through cross-disciplinary research and practical implementations
 • Understanding one enhances comprehension of the others
 
-## Important Facts & Details
-${facts.length > 0 ? facts.map(s => `• ${s.trim()}.`).join('\n') : sentences.slice(0, 4).map(s => `• ${s.trim()}.`).join('\n')}
+## 📊 Important Facts & Data
+${facts.length > 0 ? facts.map(s => `• ${s.trim()}`).join('\n') : sentences.slice(0, 4).map(s => `• ${s.trim()}`).join('\n')}
 
-## Current Applications & Relevance
+## 💡 Real-World Applications
 • These topics have widespread applications in modern society and continue to influence current practices
 • They play crucial roles in technological advancement, education, and professional development
 • Their principles are applied across multiple industries and academic disciplines
 
-## Significance & Future Implications
-These interconnected topics represent essential knowledge areas that continue to evolve and shape our understanding of complex systems, driving innovation and informing future developments in their respective fields.`;
-    } else {
-      return `## Executive Summary
-${title} represents a significant and multifaceted topic that plays an important role in its field and has substantial relevance to contemporary understanding and applications.
+## 🎓 Study Tips & Key Takeaways
+• Focus on understanding the connections between these related topics
+• Create concept maps to visualize relationships and hierarchies
+• Practice explaining concepts in your own words to ensure comprehension
 
-## Core Definition & Key Characteristics
-${definitions.length > 0 ? definitions.map(s => `• ${s.trim()}.`).join('\n') : `• ${title} encompasses several key characteristics and properties that distinguish it within its domain\n• It involves specific principles and methodologies that are fundamental to its understanding`}
+## ❓ Review Questions
+• How do these topics interconnect and influence each other?
+• What are the most significant historical developments in these areas?
+• How are these concepts applied in real-world scenarios today?`;
+     } else {
+       return `## 🎯 Learning Objectives
+• Define and explain the core concepts of ${title}
+• Understand the historical development and key milestones
+• Identify important facts, data, and characteristics
+• Analyze real-world applications and significance
 
-## Historical Background & Origins
-${historical.length > 0 ? historical.map(s => `• ${s.trim()}.`).join('\n') : '• This topic has developed through historical evolution and contributions from various scholars and practitioners\n• Its foundations were established through systematic study and practical application over time'}
+## 📚 Key Terms & Definitions
+${definitions.length > 0 ? definitions.map(s => `• ${extractKeyTerm(s)}: ${s.trim()}`).join('\n') : `• ${title}: Key characteristics and properties that distinguish it within its domain\n• Related concepts and methodologies fundamental to understanding`}
 
-## Main Categories & Classifications
+## 🏛️ Historical Background
+${historical.length > 0 ? historical.map(s => `• ${s.trim()}`).join('\n') : '• This topic has developed through historical evolution and contributions from various scholars and practitioners\n• Its foundations were established through systematic study and practical application over time'}
+
+## 🔍 Core Concepts Explained
 • This topic can be understood through various perspectives and classifications
 • Different approaches and methodologies contribute to its comprehensive understanding
 • Multiple sub-areas and specializations exist within this broader domain
 
-## Important Facts & Statistics
-${facts.length > 0 ? facts.map(s => `• ${s.trim()}.`).join('\n') : sentences.slice(0, 4).map(s => `• ${s.trim()}.`).join('\n')}
+## 📊 Important Facts & Data
+${facts.length > 0 ? facts.map(s => `• ${s.trim()}`).join('\n') : sentences.slice(0, 4).map(s => `• ${s.trim()}`).join('\n')}
 
-## Current Applications & Uses
+## 💡 Real-World Applications
 • This topic has practical applications in multiple contexts and industries
 • It influences contemporary practices and technological developments
 • Professional and academic communities actively utilize its principles and methodologies
 
-## Significance & Impact
-${title} continues to be highly relevant due to its fundamental importance, practical applications, and ongoing influence on related fields. Its principles and insights contribute to advancing knowledge and addressing contemporary challenges in its domain.`;
-    }
-  }
+## 🎯 Significance & Impact
+• ${title} continues to be highly relevant due to its fundamental importance
+• It has practical applications and ongoing influence on related fields
+• Its principles contribute to advancing knowledge and addressing contemporary challenges
+
+## 🎓 Study Tips & Key Takeaways
+• Break down complex concepts into smaller, manageable parts
+• Use examples and analogies to better understand abstract ideas
+• Connect new information to what you already know
+
+## ❓ Review Questions
+• What are the key defining characteristics of this topic?
+• How has this topic evolved historically?
+• What are the most important real-world applications?
+• Why is this topic significant in its field?`;
+     }
+   }
+   
+   function extractKeyTerm(sentence) {
+     // Try to extract the main term from a definition sentence
+     const match = sentence.match(/^([^,.:]+)(?:\s+is\s+|\s+are\s+|\s+refers?\s+to\s+|\s+means?\s+)/i);
+     return match ? match[1].trim() : sentence.split(' ').slice(0, 3).join(' ');
+   }
   
-  function enhanceAndExpandSummaryStructure(summary, title, originalContent) {
+  function enhanceStudyGuideStructure(summary, title, originalContent) {
     // Clean up the summary
     summary = summary.replace(/^\s*Summary:?\s*/i, '').trim();
     
@@ -329,7 +369,7 @@ ${title} continues to be highly relevant due to its fundamental importance, prac
     
     // If no sections found, create basic structure
     if (enhancedSections.length === 0) {
-      summary = `## Executive Summary\n\n${summary}`;
+      summary = `## 🎯 Learning Objectives\n\n${summary}`;
     } else {
       summary = enhancedSections.join('\n\n');
     }
@@ -349,33 +389,38 @@ ${title} continues to be highly relevant due to its fundamental importance, prac
       
       let relevantSentences = [];
       
-      if (titleLower.includes('executive') || titleLower.includes('summary') || titleLower.includes('overview')) {
-        relevantSentences = sentences.slice(0, 2);
-      } else if (titleLower.includes('historical') || titleLower.includes('background') || titleLower.includes('origin')) {
-        relevantSentences = sentences.filter(s => 
-          /\b(century|era|period|ancient|medieval|modern|history|historical|originally|first|began|started|founded|established|created)\b/i.test(s)
-        ).slice(0, 2);
-      } else if (titleLower.includes('fact') || titleLower.includes('statistic') || titleLower.includes('detail')) {
-        relevantSentences = sentences.filter(s => 
-          /\b\d{4}\b|\b\d+[,.]?\d*\s*(percent|%|million|billion|thousand|meters?|feet|miles|kg|pounds)\b/i.test(s)
-        ).slice(0, 3);
-      } else if (titleLower.includes('definition') || titleLower.includes('concept') || titleLower.includes('characteristic')) {
-        relevantSentences = sentences.filter(s => 
-          /\bis\s+(a|an|the)|\bdefines?\b|\bknown\s+as\b|\brefers?\s+to\b|\bcharacterized\s+by\b/i.test(s)
-        ).slice(0, 2);
-      } else if (titleLower.includes('application') || titleLower.includes('use') || titleLower.includes('relevance')) {
-        relevantSentences = sentences.filter(s => 
-          /\b(used|applied|utilize|employ|practice|implementation|application|relevant|important|significant)\b/i.test(s)
-        ).slice(0, 2);
-      } else {
-        relevantSentences = sentences.slice(0, 2);
-      }
-      
-      if (relevantSentences.length > 0) {
-        return relevantSentences.map(s => `• ${s.trim()}.`).join('\n');
-      } else {
-        return `• This section provides important information about ${title} related to ${sectionTitle.toLowerCase()}.`;
-      }
+             if (titleLower.includes('learning objectives') || titleLower.includes('overview')) {
+         return `• Understand the core concepts and principles of ${title}\n• Identify key characteristics and important features\n• Analyze the significance and applications\n• Evaluate the impact and relevance in its field`;
+       } else if (titleLower.includes('key terms') || titleLower.includes('definition') || titleLower.includes('concept')) {
+         const terms = sentences.filter(s => 
+           /\bis\s+(a|an|the)|\bdefines?\b|\bknown\s+as\b|\brefers?\s+to\b|\bcharacterized\s+by\b/i.test(s)
+         ).slice(0, 3);
+         return terms.length > 0 ? terms.map(s => `• ${extractKeyTerm(s)}: ${s.trim()}`).join('\n') : `• ${title}: Key characteristics and properties that distinguish it within its domain`;
+       } else if (titleLower.includes('historical') || titleLower.includes('background') || titleLower.includes('origin')) {
+         relevantSentences = sentences.filter(s => 
+           /\b(century|era|period|ancient|medieval|modern|history|historical|originally|first|began|started|founded|established|created)\b/i.test(s)
+         ).slice(0, 3);
+       } else if (titleLower.includes('fact') || titleLower.includes('statistic') || titleLower.includes('data')) {
+         relevantSentences = sentences.filter(s => 
+           /\b\d{4}\b|\b\d+[,.]?\d*\s*(percent|%|million|billion|thousand|meters?|feet|miles|kg|pounds)\b/i.test(s)
+         ).slice(0, 4);
+       } else if (titleLower.includes('application') || titleLower.includes('use') || titleLower.includes('relevance')) {
+         relevantSentences = sentences.filter(s => 
+           /\b(used|applied|utilize|employ|practice|implementation|application|relevant|important|significant)\b/i.test(s)
+         ).slice(0, 3);
+       } else if (titleLower.includes('study tips') || titleLower.includes('takeaways')) {
+         return `• Break down complex concepts into smaller, manageable parts\n• Use examples and analogies to better understand abstract ideas\n• Connect new information to what you already know\n• Practice explaining concepts in your own words`;
+       } else if (titleLower.includes('review questions') || titleLower.includes('questions')) {
+         return `• What are the key defining characteristics of this topic?\n• How has this topic evolved historically?\n• What are the most important real-world applications?\n• Why is this topic significant in its field?`;
+       } else {
+         relevantSentences = sentences.slice(0, 3);
+       }
+       
+       if (relevantSentences.length > 0) {
+         return relevantSentences.map(s => `• ${s.trim()}`).join('\n');
+       } else {
+         return `• This section provides important information about ${title} related to ${sectionTitle.toLowerCase()}.`;
+       }
     }
     
     return content;
