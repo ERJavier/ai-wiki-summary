@@ -32,7 +32,7 @@ Transform lengthy Wikipedia articles into concise, intelligent summaries using a
 
 ### Prerequisites
 - Node.js (v14 or higher)
-- A Hugging Face API key (free tier available)
+- An OpenRouter API key (free tier available for Mistral models)
 
 ### Installation
 
@@ -52,11 +52,11 @@ Transform lengthy Wikipedia articles into concise, intelligent summaries using a
 3. **Set up environment variables**
    Create a `.env` file in the root directory:
    ```env
-   HUGGINGFACE_API_KEY=your_huggingface_api_key_here
+   OPENROUTER_API_KEY=your_openrouter_api_key_here
    PORT=3000
    ```
 
-   Get your free Hugging Face API key from: https://huggingface.co/settings/tokens
+   Get your free OpenRouter API key from: https://openrouter.ai/
 
 4. **Start the application**
    ```bash
@@ -86,7 +86,7 @@ Transform lengthy Wikipedia articles into concise, intelligent summaries using a
 
 ### Backend
 - **Express.js**: Fast, minimal web framework
-- **Hugging Face API**: Multiple AI models for summarization
+- **OpenRouter API**: Access to Mistral Small 3.2 24B model for summarization
 - **Wikipedia API**: Content fetching and validation
 
 ### Frontend
@@ -95,11 +95,13 @@ Transform lengthy Wikipedia articles into concise, intelligent summaries using a
 - **Local Storage**: Client-side history management
 - **Progressive Enhancement**: Works without JavaScript for basic functionality
 
-### AI Models Used
-1. **facebook/bart-large-cnn**: Optimized for news and article summarization
-2. **microsoft/DialoGPT-medium**: Conversational AI model
-3. **google/pegasus-xsum**: Abstractive summarization specialist
-4. **t5-base**: General-purpose text-to-text transformer
+### AI Model Used
+- **Mistral Small 3.2 24B**: Advanced instruction-following model optimized for:
+  - Educational content generation
+  - Structured output generation
+  - Function calling and tool use
+  - Strong performance on coding, STEM, and vision benchmarks
+  - Free tier available through OpenRouter
 
 ## 🎨 Design System
 
@@ -121,7 +123,7 @@ The application is fully responsive with:
 ## 🔧 Configuration
 
 ### Environment Variables
-- `HUGGINGFACE_API_KEY`: Your Hugging Face API key (required)
+- `OPENROUTER_API_KEY`: Your OpenRouter API key (required)
 - `PORT`: Server port (default: 3000)
 - `NODE_ENV`: Environment mode (development/production)
 
@@ -151,7 +153,7 @@ The application is ready for deployment to:
 ### Example Deployment (Vercel)
 1. Push your code to GitHub
 2. Connect your repository to Vercel
-3. Add your `HUGGINGFACE_API_KEY` environment variable
+3. Add your `OPENROUTER_API_KEY` environment variable
 4. Deploy with zero configuration
 
 ## 🤝 Contributing
@@ -170,7 +172,8 @@ This project is licensed under the ISC License - see the LICENSE file for detail
 
 ## 🙏 Acknowledgments
 
-- **Hugging Face**: For providing excellent AI models and API
+- **OpenRouter**: For providing access to high-quality AI models through their API
+- **Mistral AI**: For developing the excellent Mistral Small 3.2 24B model
 - **Wikipedia**: For the comprehensive encyclopedia and API
 - **Open Source Community**: For the tools and libraries that make this possible
 
