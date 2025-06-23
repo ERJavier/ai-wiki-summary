@@ -221,6 +221,9 @@
                 // Convert horizontal rules (--- or ***)
                 .replace(/^[\-\*]{3,}$/gm, '<hr>');
 
+            // Handle tables
+            formatted = parseMarkdownTables(formatted);
+
             // Split into paragraphs and process
             formatted = formatted
                 .split('\n\n')
@@ -229,7 +232,7 @@
                     if (!paragraph) return '';
                     
                     // Don't wrap already formatted elements
-                    if (paragraph.match(/^<(h[1-6]|ul|ol|li|blockquote|hr|div)/)) {
+                    if (paragraph.match(/^<(h[1-6]|ul|ol|li|blockquote|hr|div|table)/)) {
                         return paragraph;
                     }
                     
@@ -252,6 +255,57 @@
             formatted = formatted.replace(/\n{3,}/g, '\n\n');
             
             return formatted;
+        }
+
+        function parseMarkdownTables(text) {
+            // Match markdown table pattern
+            const tableRegex = /(\|[^\n]+\|\n)+(\|[\s\-:]*\|\n)?(\|[^\n]+\|\n)*/g;
+            
+            return text.replace(tableRegex, (match) => {
+                const lines = match.trim().split('\n');
+                if (lines.length < 2) return match;
+                
+                // Find header separator line (contains dashes)
+                let headerIndex = -1;
+                let separatorIndex = -1;
+                
+                for (let i = 0; i < lines.length; i++) {
+                    if (lines[i].includes('-') && lines[i].includes('|')) {
+                        separatorIndex = i;
+                        headerIndex = i - 1;
+                        break;
+                    }
+                }
+                
+                if (headerIndex === -1 || separatorIndex === -1) return match;
+                
+                // Parse header
+                const headerCells = lines[headerIndex]
+                    .split('|')
+                    .filter(cell => cell.trim())
+                    .map(cell => `<th>${cell.trim()}</th>`);
+                
+                // Parse body rows
+                const bodyRows = lines.slice(separatorIndex + 1)
+                    .map(line => {
+                        const cells = line
+                            .split('|')
+                            .filter(cell => cell.trim())
+                            .map(cell => `<td>${cell.trim()}</td>`);
+                        return `<tr>${cells.join('')}</tr>`;
+                    });
+                
+                return `<div class="table-container">
+                    <table class="summary-table">
+                        <thead>
+                            <tr>${headerCells.join('')}</tr>
+                        </thead>
+                        <tbody>
+                            ${bodyRows.join('')}
+                        </tbody>
+                    </table>
+                </div>`;
+            });
         }
 
         function copySummary() {
