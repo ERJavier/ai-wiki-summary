@@ -3,302 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Wikipedia Summarizer - Intelligent Article Summaries</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
-    
-    <!-- SEO Meta Tags -->
-    <meta name="description" content="Transform lengthy Wikipedia articles into concise, intelligent summaries using advanced AI. Get the key insights in seconds.">
-    <meta name="keywords" content="AI, Wikipedia, Summarizer, Machine Learning, NLP, Article Summary, Artificial Intelligence">
-    <meta name="author" content="AI Tools">
-    
-    <!-- Open Graph Meta Tags -->
-    <meta property="og:title" content="AI Wikipedia Summarizer - Intelligent Article Summaries">
-    <meta property="og:description" content="Transform lengthy Wikipedia articles into concise, intelligent summaries using advanced AI.">
-    <meta property="og:type" content="website">
-    <meta property="og:image" content="/og-image.jpg">
-    
-    <!-- Twitter Card Meta Tags -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="AI Wikipedia Summarizer">
-    <meta name="twitter:description" content="Transform lengthy Wikipedia articles into concise, intelligent summaries using advanced AI.">
-    
-    <!-- Fonts -->
+    <title>AI Wikipedia Summarizer</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    
-    <!-- External CSS -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
         <header class="header">
-            <div class="header-icon">🤖</div>
-            <h1>AI Wikipedia Summarizer</h1>
-            <p>Transform lengthy Wikipedia articles into concise, intelligent summaries using advanced AI technology</p>
+            <h1>Wikipedia Summarizer</h1>
+            <p>Intelligent summaries from Wikipedia articles</p>
         </header>
 
-        <main class="main-card">
-            <div class="card-header">
-                <h2 style="font-size: 1.25rem; font-weight: 600; color: var(--gray-800);">Create Summary</h2>
-            </div>
-            
-            <div class="card-body">
+        <main class="main-content">
+            <div class="input-section">
                 <form id="summarizerForm">
-                    <div class="form-group">
-                        <div style="display: flex; align-items: center; gap: var(--spacing-md); margin-bottom: var(--spacing-sm);">
-                            <label class="form-label" style="margin-bottom: 0;">Wikipedia Articles</label>
-                            <div class="input-mode-toggle">
-                                <button type="button" class="mode-btn active" data-mode="single">Single Article</button>
-                                <button type="button" class="mode-btn" data-mode="multiple">Multiple Articles</button>
-                            </div>
-                        </div>
-                        
-                        <div id="singleUrlMode" class="url-input-mode">
-                            <input 
-                                type="url" 
-                                id="wikipediaUrl" 
-                                class="form-input"
-                                placeholder="https://en.wikipedia.org/wiki/Artificial_intelligence"
-                                autocomplete="url"
-                            >
-                            <div id="urlValidation" class="input-validation"></div>
-                        </div>
-                        
-                        <div id="multipleUrlMode" class="url-input-mode" style="display: none;">
-                            <div id="urlInputs">
-                                <div class="url-input-row">
-                                    <input 
-                                        type="url" 
-                                        class="form-input url-input-multi"
-                                        placeholder="https://en.wikipedia.org/wiki/Article_1"
-                                        autocomplete="url"
-                                    >
-                                    <button type="button" class="btn-remove-url" disabled>×</button>
-                                </div>
-                            </div>
-                            <button type="button" id="addUrlBtn" class="btn btn-secondary btn-add-url">
-                                ➕ Add Another Article
-                            </button>
-                            <div id="multiUrlValidation" class="multi-url-validation"></div>
-                        </div>
-                        
-                        <div class="form-help">
-                            <strong>Single Mode:</strong> Summarize one Wikipedia article<br>
-                            <strong>Multiple Mode:</strong> Combine and summarize multiple articles on related topics<br>
-                            <strong>Example:</strong> https://en.wikipedia.org/wiki/Machine_learning
-                        </div>
+                    <div class="input-group">
+                        <input 
+                            type="url" 
+                            id="wikipediaUrl" 
+                            class="url-input"
+                            placeholder="Enter Wikipedia article URL"
+                            required
+                        >
+                        <button type="submit" class="submit-btn" id="submitBtn">
+                            <span id="submitText">Summarize</span>
+                        </button>
                     </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Study Guide Detail Level</label>
-                        <div class="summary-options">
-                            <div class="option-card selected" data-length="short">
-                                <h4>🎓 Essential Study Guide</h4>
-                                <p>Learning objectives • Key terms • Review questions</p>
-                            </div>
-                            <div class="option-card" data-length="medium">
-                                <h4>📚 Comprehensive Study Guide</h4>
-                                <p>Detailed explanations • Rich context • Study tips</p>
-                            </div>
-                            <div class="option-card" data-length="long">
-                                <h4>🎯 Complete Study Guide</h4>
-                                <p>Full coverage • Multiple examples • Exam preparation</p>
-                            </div>
-                        </div>
+                    
+                    <div class="length-options">
+                        <label class="length-option">
+                            <input type="radio" name="length" value="short" checked>
+                            <span>Brief</span>
+                        </label>
+                        <label class="length-option">
+                            <input type="radio" name="length" value="medium">
+                            <span>Detailed</span>
+                        </label>
+                        <label class="length-option">
+                            <input type="radio" name="length" value="long">
+                            <span>Complete</span>
+                        </label>
                     </div>
-
-                    <button type="submit" class="btn btn-primary btn-full" id="submitBtn">
-                        <span id="submitText">Generate Summary</span>
-                    </button>
                 </form>
+            </div>
 
-                <div class="loading" id="loading">
-                    <div class="progress-steps">
-                        <div class="progress-step">
-                            <div class="step-circle" id="step1">1</div>
-                            <div class="step-text">Fetching Articles</div>
-                        </div>
-                        <div class="progress-step">
-                            <div class="step-circle" id="step2">2</div>
-                            <div class="step-text">Processing Content</div>
-                        </div>
-                        <div class="progress-step">
-                            <div class="step-circle" id="step3">3</div>
-                            <div class="step-text">Generating Summary</div>
-                        </div>
-                    </div>
-                    
-                    <div id="articleProgress" class="article-progress" style="display: none;">
-                        <div class="progress-header">
-                            <h4>Processing Articles</h4>
-                            <span id="progressCounter">0/0</span>
-                        </div>
-                        <div id="articleList" class="article-list"></div>
-                    </div>
-                    
-                    <div class="spinner"></div>
-                    <p id="loadingText">Analyzing Wikipedia articles...</p>
-                </div>
+            <div class="loading" id="loading">
+                <div class="loading-spinner"></div>
+                <p>Generating summary...</p>
+            </div>
 
-                <div class="result" id="result">
-                    <div class="result-header">
-                        <h3 class="result-title">📝 Article Summary</h3>
-                        <div class="result-meta">
-                            <span id="wordCount"></span>
+            <div class="result-section" id="result">
+                <article class="summary-article">
+                    <header class="summary-header">
+                        <h2 id="summaryTitle">Article Summary</h2>
+                        <div class="summary-meta">
                             <span id="readingTime"></span>
                         </div>
-                    </div>
+                    </header>
+                    
                     <div class="summary-content" id="summaryText"></div>
-                    <div class="result-actions">
-                        <button class="btn btn-primary" id="copyBtn">
-                            📋 Copy Summary
-                        </button>
-                        <button class="btn btn-secondary" id="saveBtn">
-                            💾 Save to History
-                        </button>
-                        <button class="btn btn-secondary" id="shareBtn">
-                            🔗 Share
-                        </button>
-                    </div>
-                </div>
+                    
+                    <footer class="summary-footer">
+                        <div class="source-link" id="sourceLink"></div>
+                        <button class="copy-btn" id="copyBtn">Copy text</button>
+                    </footer>
+                </article>
+            </div>
 
-                <div class="error" id="error">
-                    <div class="error-title">❌ Something went wrong</div>
-                    <div class="error-message" id="errorMessage"></div>
-                </div>
+            <div class="error" id="error">
+                <p id="errorMessage"></p>
             </div>
         </main>
-
-        <section class="history" id="historySection">
-            <div class="main-card">
-                <div class="card-header">
-                    <div class="history-header">
-                        <h3 class="history-title">📚 Recent Summaries</h3>
-                        <span class="history-clear" id="clearHistory">Clear All</span>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div id="historyList"></div>
-                </div>
-            </div>
-        </section>
     </div>
 
-    <div id="toast" class="toast">Summary copied to clipboard!</div>
+    <div id="toast" class="toast">Text copied!</div>
 
     <script>
-        // State management
         let currentSummaryLength = 'short';
-        let summaryHistory = JSON.parse(localStorage.getItem('summaryHistory') || '[]');
-        let currentMode = 'single';
-        let urlCount = 1;
 
         // DOM Elements
         const form = document.getElementById('summarizerForm');
         const urlInput = document.getElementById('wikipediaUrl');
-        const urlValidation = document.getElementById('urlValidation');
-        const summaryOptions = document.querySelectorAll('.option-card');
         const submitBtn = document.getElementById('submitBtn');
         const submitText = document.getElementById('submitText');
         const loading = document.getElementById('loading');
-        const loadingText = document.getElementById('loadingText');
         const result = document.getElementById('result');
         const error = document.getElementById('error');
         const summaryText = document.getElementById('summaryText');
-        const wordCount = document.getElementById('wordCount');
+        const summaryTitle = document.getElementById('summaryTitle');
         const readingTime = document.getElementById('readingTime');
+        const sourceLink = document.getElementById('sourceLink');
         const copyBtn = document.getElementById('copyBtn');
-        const saveBtn = document.getElementById('saveBtn');
-        const shareBtn = document.getElementById('shareBtn');
         const toast = document.getElementById('toast');
-        const historySection = document.getElementById('historySection');
-        const historyList = document.getElementById('historyList');
-        const clearHistory = document.getElementById('clearHistory');
-        
-        // Multi-URL elements
-        const modeButtons = document.querySelectorAll('.mode-btn');
-        const singleUrlMode = document.getElementById('singleUrlMode');
-        const multipleUrlMode = document.getElementById('multipleUrlMode');
-        const urlInputs = document.getElementById('urlInputs');
-        const addUrlBtn = document.getElementById('addUrlBtn');
-        const multiUrlValidation = document.getElementById('multiUrlValidation');
-        const articleProgress = document.getElementById('articleProgress');
-        const progressCounter = document.getElementById('progressCounter');
-        const articleList = document.getElementById('articleList');
 
         // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
-            updateHistoryDisplay();
-            setupEventListeners();
-        });
+        document.addEventListener('DOMContentLoaded', setupEventListeners);
 
         function setupEventListeners() {
-            // Mode switching
-            modeButtons.forEach(btn => {
-                btn.addEventListener('click', () => switchMode(btn.dataset.mode));
-            });
-
-            // URL validation
-            urlInput.addEventListener('input', validateUrl);
-            urlInput.addEventListener('paste', (e) => {
-                setTimeout(validateUrl, 100);
-            });
-
-            // Multiple URL management
-            addUrlBtn.addEventListener('click', addUrlInput);
-            
-            // Add event listener for initial remove button
-            const initialRemoveBtn = document.querySelector('.btn-remove-url');
-            if (initialRemoveBtn) {
-                initialRemoveBtn.addEventListener('click', () => removeUrlInput(initialRemoveBtn));
-            }
-            
-            // Add event listeners for multiple URL inputs
-            document.querySelectorAll('.url-input-multi').forEach(input => {
-                input.addEventListener('input', validateMultipleUrls);
-                input.addEventListener('paste', () => setTimeout(validateMultipleUrls, 100));
-            });
-            
-            // Summary length selection
-            summaryOptions.forEach(option => {
-                option.addEventListener('click', () => {
-                    summaryOptions.forEach(opt => opt.classList.remove('selected'));
-                    option.classList.add('selected');
-                    currentSummaryLength = option.dataset.length;
-                });
-            });
-
             // Form submission
             form.addEventListener('submit', handleSubmit);
 
-            // Button actions
+            // Length selection
+            document.querySelectorAll('input[name="length"]').forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    currentSummaryLength = e.target.value;
+                });
+            });
+
+            // Copy button
             copyBtn.addEventListener('click', copySummary);
-            saveBtn.addEventListener('click', saveToHistory);
-            shareBtn.addEventListener('click', shareSummary);
-            clearHistory.addEventListener('click', clearAllHistory);
-        }
-
-        function validateUrl() {
-            const url = urlInput.value.trim();
-            
-            if (!url) {
-                urlValidation.innerHTML = '';
-                urlInput.classList.remove('valid', 'invalid');
-                return;
-            }
-
-            if (isValidWikipediaUrl(url)) {
-                urlValidation.innerHTML = '<span>✓ Valid Wikipedia URL</span>';
-                urlValidation.className = 'input-validation valid';
-                urlInput.classList.remove('invalid');
-                urlInput.classList.add('valid');
-            } else {
-                urlValidation.innerHTML = '<span>⚠️ Please enter a valid Wikipedia article URL</span>';
-                urlValidation.className = 'input-validation invalid';
-                urlInput.classList.remove('valid');
-                urlInput.classList.add('invalid');
-            }
         }
 
         function isValidWikipediaUrl(url) {
@@ -313,65 +128,36 @@
         async function handleSubmit(e) {
             e.preventDefault();
             
-            const urls = getUrlsFromInputs();
+            const url = urlInput.value.trim();
             
-            if (urls.length === 0) {
-                showError('Please enter at least one valid Wikipedia article URL');
+            if (!url || !isValidWikipediaUrl(url)) {
+                showError('Please enter a valid Wikipedia article URL');
                 return;
             }
 
-            // Show loading state
             showLoading();
             hideError();
             hideResult();
 
             try {
-                let response, data;
+                const response = await fetch('/api/summarize', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        url: url,
+                        length: currentSummaryLength 
+                    })
+                });
                 
-                if (urls.length === 1) {
-                    // Single URL processing
-                    await simulateProgress();
-                    
-                    response = await fetch('/api/summarize', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ 
-                            url: urls[0],
-                            length: currentSummaryLength 
-                        })
-                    });
-                    
-                    data = await response.json();
-                } else {
-                    // Multiple URLs processing
-                    await simulateMultiProgress(urls);
-                    
-                    response = await fetch('/api/summarize-multiple', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ 
-                            urls: urls,
-                            length: currentSummaryLength 
-                        })
-                    });
-                    
-                    data = await response.json();
-                }
+                const data = await response.json();
 
                 if (!response.ok) {
                     throw new Error(data.error || 'Failed to generate summary');
                 }
 
-                // Show result
-                if (urls.length === 1) {
-                    displaySummary(data.summary, data.title, urls[0]);
-                } else {
-                    displayMultipleSummary(data.summary, data.titles, urls, data.successCount, data.totalCount);
-                }
+                displaySummary(data.summary, data.title, url);
                 hideLoading();
 
             } catch (err) {
@@ -380,537 +166,137 @@
             }
         }
 
-        async function simulateProgress() {
-            const steps = [
-                { id: 'step1', text: 'Fetching Wikipedia article...' },
-                { id: 'step2', text: 'Processing article content...' },
-                { id: 'step3', text: 'Generating AI summary...' }
-            ];
-
-            for (let i = 0; i < steps.length; i++) {
-                const step = steps[i];
-                const stepElement = document.getElementById(step.id);
-                
-                stepElement.classList.add('active');
-                loadingText.textContent = step.text;
-                
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                stepElement.classList.remove('active');
-                stepElement.classList.add('completed');
-            }
-        }
-
-        async function simulateMultiProgress(urls) {
-            // Show article progress section
-            articleProgress.style.display = 'block';
-            progressCounter.textContent = `0/${urls.length}`;
-            
-            // Create progress items for each URL
-            articleList.innerHTML = urls.map((url, index) => {
-                const title = extractTitleFromUrl(url);
-                return `
-                    <div class="article-progress-item" id="article-${index}">
-                        <div class="article-status-icon pending" id="icon-${index}">⏳</div>
-                        <div class="article-title">${title}</div>
-                        <div class="article-status-text" id="status-${index}">Pending</div>
-                    </div>
-                `;
-            }).join('');
-
-            const steps = [
-                { id: 'step1', text: 'Fetching Wikipedia articles...' },
-                { id: 'step2', text: 'Processing combined content...' },
-                { id: 'step3', text: 'Generating unified summary...' }
-            ];
-
-            // Step 1: Simulate fetching articles
-            document.getElementById('step1').classList.add('active');
-            loadingText.textContent = steps[0].text;
-            
-            for (let i = 0; i < urls.length; i++) {
-                const iconEl = document.getElementById(`icon-${i}`);
-                const statusEl = document.getElementById(`status-${i}`);
-                
-                iconEl.className = 'article-status-icon processing';
-                iconEl.textContent = '⚡';
-                statusEl.textContent = 'Fetching...';
-                
-                await new Promise(resolve => setTimeout(resolve, 800));
-                
-                iconEl.className = 'article-status-icon completed';
-                iconEl.textContent = '✓';
-                statusEl.textContent = 'Completed';
-                
-                progressCounter.textContent = `${i + 1}/${urls.length}`;
-            }
-            
-            document.getElementById('step1').classList.remove('active');
-            document.getElementById('step1').classList.add('completed');
-
-            // Step 2: Processing
-            document.getElementById('step2').classList.add('active');
-            loadingText.textContent = steps[1].text;
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            document.getElementById('step2').classList.remove('active');
-            document.getElementById('step2').classList.add('completed');
-
-            // Step 3: Generating summary
-            document.getElementById('step3').classList.add('active');
-            loadingText.textContent = steps[2].text;
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            document.getElementById('step3').classList.remove('active');
-            document.getElementById('step3').classList.add('completed');
-        }
-
-        function extractTitleFromUrl(url) {
-            try {
-                const urlParts = url.split('/wiki/');
-                if (urlParts.length > 1) {
-                    return decodeURIComponent(urlParts[1].replace(/_/g, ' '));
-                }
-                return 'Wikipedia Article';
-            } catch {
-                return 'Wikipedia Article';
-            }
-        }
-
-        function displayMultipleSummary(summary, titles, urls, successCount, totalCount) {
-            summaryText.innerHTML = formatStructuredSummary(summary);
-            
-            // Calculate word count and reading time
-            const words = summary.split(/\s+/).length;
-            const readingTimeMin = Math.ceil(words / 200);
-            
-            wordCount.textContent = `${words} words`;
-            readingTime.textContent = `~${readingTimeMin} min read`;
-            
-            // Update result title for multiple articles
-            document.querySelector('.result-title').innerHTML = 
-                `📚 Combined Summary of ${successCount} Articles`;
-            
-            // Add source information with article links
-            const sourceInfo = document.createElement('div');
-            sourceInfo.className = 'source-articles';
-            sourceInfo.innerHTML = `
-                <div class="source-header">
-                    <h4>📖 Source Articles (${successCount}/${totalCount})</h4>
-                </div>
-                <div class="source-links">
-                    ${titles.map((title, index) => `
-                        <a href="${urls[index]}" target="_blank" class="source-link">
-                            ${title}
-                        </a>
-                    `).join('')}
-                </div>
-            `;
-            
-            // Add warning if some articles failed
-            if (successCount < totalCount) {
-                const warning = document.createElement('div');
-                warning.className = 'processing-warning';
-                warning.innerHTML = `
-                    <strong>⚠️ Partial Success:</strong> Successfully processed ${successCount} out of ${totalCount} articles. 
-                    Some articles may have been skipped due to access issues.
-                `;
-                sourceInfo.appendChild(warning);
-            }
-            
-            document.querySelector('.summary-content').parentNode.insertBefore(
-                sourceInfo, 
-                document.querySelector('.summary-content')
-            );
-            
-            // Store current summary data with multiple URLs
-            window.currentSummary = { 
-                summary, 
-                title: `Combined Summary (${titles.join(', ')})`, 
-                urls: urls, 
-                timestamp: Date.now(),
-                isMultiple: true
-            };
-            
-            showResult();
-        }
-
         function displaySummary(summary, title, url) {
-            summaryText.innerHTML = formatStructuredSummary(summary);
+            // Set title
+            summaryTitle.textContent = title;
             
-            // Calculate word count and reading time
+            // Format and display content
+            summaryText.innerHTML = formatSummary(summary);
+            
+            // Calculate reading time
             const words = summary.split(/\s+/).length;
             const readingTimeMin = Math.ceil(words / 200);
+            readingTime.textContent = `${readingTimeMin} min read`;
             
-            wordCount.textContent = `${words} words`;
-            readingTime.textContent = `~${readingTimeMin} min read`;
+            // Add source link
+            sourceLink.innerHTML = `<a href="${url}" target="_blank">View original article</a>`;
             
-            // Add source information for single article
-            const sourceInfo = document.createElement('div');
-            sourceInfo.className = 'source-articles';
-            sourceInfo.innerHTML = `
-                <div class="source-header">
-                    <h4>📖 Source Article</h4>
-                </div>
-                <div class="source-links">
-                    <a href="${url}" target="_blank" class="source-link">
-                        ${title}
-                    </a>
-                </div>
-            `;
-            
-            document.querySelector('.summary-content').parentNode.insertBefore(
-                sourceInfo, 
-                document.querySelector('.summary-content')
-            );
-            
-            // Store current summary data
-            window.currentSummary = { summary, title, url, timestamp: Date.now() };
+            // Store for copying
+            window.currentSummary = summary;
             
             showResult();
         }
 
-        function formatStructuredSummary(summary) {
-            // Convert markdown-style headers and formatting to HTML
-            let formattedSummary = summary
-                // Convert headers with better section detection
-                .replace(/^## (.+)$/gm, (match, title) => {
-                    const icon = getSectionIcon(title);
-                    return `<h3 class="summary-section-title" data-section="${title.toLowerCase().replace(/\s+/g, '-')}">${icon} ${title}</h3>`;
-                })
-                // Convert bullet points
-                .replace(/^• (.+)$/gm, '<li>$1</li>')
-                // Convert numbered lists
+        function formatSummary(summary) {
+            // Comprehensive markdown-to-HTML conversion for readability
+            let formatted = summary
+                // Convert headers (## Title)
+                .replace(/^### (.+)$/gm, '<h4 class="sub-section-title">$1</h4>')
+                .replace(/^## (.+)$/gm, '<h3 class="section-title">$1</h3>')
+                .replace(/^# (.+)$/gm, '<h2 class="main-title">$1</h2>')
+                
+                // Convert bold text (**text** and __text__)
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/__(.*?)__/g, '<strong>$1</strong>')
+                
+                // Convert italic text (*text* and _text_)
+                .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+                .replace(/_([^_]+)_/g, '<em>$1</em>')
+                
+                // Convert inline code (`code`)
+                .replace(/`([^`]+)`/g, '<code>$1</code>')
+                
+                // Convert links [text](url)
+                .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
+                
+                // Convert bullet points (•, -, *, +)
+                .replace(/^[•\-\*\+]\s+(.+)$/gm, '<li>$1</li>')
+                
+                // Convert numbered lists (1. item, 2. item, etc.)
                 .replace(/^\d+\.\s+(.+)$/gm, '<li>$1</li>')
-                // Convert paragraphs
-                .replace(/\n\n/g, '</p><p>')
-                .replace(/^(?!<[h|l])/gm, '<p>')
-                .replace(/(?<![>])$/gm, '</p>');
-            
-            // Wrap consecutive list items in ul tags with enhanced detection
-            formattedSummary = formattedSummary.replace(/(<li>.*?<\/li>)(?:\s*<\/p>\s*<p>\s*(<li>.*?<\/li>))*/gs, (match) => {
-                const listItems = match.match(/<li>.*?<\/li>/g) || [];
-                return `<ul class="summary-list">${listItems.join('')}</ul>`;
+                
+                // Convert blockquotes (> text)
+                .replace(/^>\s+(.+)$/gm, '<blockquote>$1</blockquote>')
+                
+                // Convert horizontal rules (--- or ***)
+                .replace(/^[\-\*]{3,}$/gm, '<hr>');
+
+            // Split into paragraphs and process
+            formatted = formatted
+                .split('\n\n')
+                .map(paragraph => {
+                    paragraph = paragraph.trim();
+                    if (!paragraph) return '';
+                    
+                    // Don't wrap already formatted elements
+                    if (paragraph.match(/^<(h[1-6]|ul|ol|li|blockquote|hr|div)/)) {
+                        return paragraph;
+                    }
+                    
+                    // Handle list items specially
+                    if (paragraph.includes('<li>')) {
+                        return paragraph;
+                    }
+                    
+                    // Wrap regular text in paragraph tags
+                    return `<p>${paragraph}</p>`;
+                })
+                .join('\n\n');
+
+            // Wrap consecutive list items in ul tags
+            formatted = formatted.replace(/(<li>.*?<\/li>\s*)+/gs, (match) => {
+                return `<ul>${match.trim()}</ul>`;
             });
             
-            // Clean up empty paragraphs and fix formatting
-            formattedSummary = formattedSummary
-                .replace(/<p><\/p>/g, '')
-                .replace(/<p>\s*<h3/g, '<h3')
-                .replace(/<\/h3>\s*<\/p>/g, '</h3>')
-                .replace(/<p>\s*<ul/g, '<ul')
-                .replace(/<\/ul>\s*<\/p>/g, '</ul>')
-                .replace(/^\s*<\/p>/, '')
-                .replace(/<p>\s*$/, '')
-                // Remove duplicate empty tags
-                .replace(/(<p>\s*<\/p>)+/g, '')
-                .replace(/\n{3,}/g, '\n\n');
+            // Clean up multiple consecutive line breaks
+            formatted = formatted.replace(/\n{3,}/g, '\n\n');
             
-            return `<div class="structured-summary">${formattedSummary}</div>`;
-        }
-
-        function getSectionIcon(title) {
-            const titleLower = title.toLowerCase();
-            
-            if (titleLower.includes('learning objectives') || titleLower.includes('objectives')) {
-                return '🎯';
-            } else if (titleLower.includes('key terms') || titleLower.includes('definitions') || titleLower.includes('vocabulary')) {
-                return '📚';
-            } else if (titleLower.includes('historical') || titleLower.includes('background') || titleLower.includes('timeline')) {
-                return '🏛️';
-            } else if (titleLower.includes('core concepts') || titleLower.includes('concepts explained') || titleLower.includes('explained')) {
-                return '🔍';
-            } else if (titleLower.includes('connections') || titleLower.includes('relationships') || titleLower.includes('interconnection')) {
-                return '🔗';
-            } else if (titleLower.includes('facts') || titleLower.includes('data') || titleLower.includes('statistics')) {
-                return '📊';
-            } else if (titleLower.includes('applications') || titleLower.includes('real-world') || titleLower.includes('uses')) {
-                return '💡';
-            } else if (titleLower.includes('significance') || titleLower.includes('impact')) {
-                return '🎯';
-            } else if (titleLower.includes('study tips') || titleLower.includes('takeaways') || titleLower.includes('key takeaways')) {
-                return '🎓';
-            } else if (titleLower.includes('review questions') || titleLower.includes('questions')) {
-                return '❓';
-            } else if (titleLower.includes('categories') || titleLower.includes('classification') || titleLower.includes('types')) {
-                return '📂';
-            } else if (titleLower.includes('process') || titleLower.includes('mechanism') || titleLower.includes('methodology')) {
-                return '⚙️';
-            } else if (titleLower.includes('current') || titleLower.includes('modern') || titleLower.includes('today')) {
-                return '🌟';
-            } else if (titleLower.includes('future') || titleLower.includes('implications') || titleLower.includes('trends')) {
-                return '🔮';
-            } else {
-                return '📝';
-            }
+            return formatted;
         }
 
         function copySummary() {
-            // Get the plain text version of the structured summary
-            const textContent = summaryText.textContent || window.currentSummary?.summary || '';
-            navigator.clipboard.writeText(textContent).then(() => {
-                showToast('Summary copied to clipboard!');
-            }).catch(() => {
-                showToast('Failed to copy summary');
-            });
-        }
-
-        function saveToHistory() {
             if (window.currentSummary) {
-                summaryHistory.unshift(window.currentSummary);
-                
-                // Keep only last 10 summaries
-                if (summaryHistory.length > 10) {
-                    summaryHistory = summaryHistory.slice(0, 10);
-                }
-                
-                localStorage.setItem('summaryHistory', JSON.stringify(summaryHistory));
-                updateHistoryDisplay();
-                showToast('Summary saved to history!');
-            }
-        }
-
-        function shareSummary() {
-            if (navigator.share && window.currentSummary) {
-                navigator.share({
-                    title: `AI Summary: ${window.currentSummary.title}`,
-                    text: window.currentSummary.summary,
-                    url: window.currentSummary.url
+                navigator.clipboard.writeText(window.currentSummary).then(() => {
+                    showToast('Text copied to clipboard!');
+                }).catch(() => {
+                    showToast('Failed to copy text');
                 });
-            } else {
-                // Fallback: copy URL to clipboard
-                navigator.clipboard.writeText(window.currentSummary.url).then(() => {
-                    showToast('Article URL copied to clipboard!');
-                });
-            }
-        }
-
-        function updateHistoryDisplay() {
-            if (summaryHistory.length === 0) {
-                historySection.classList.remove('show');
-                return;
-            }
-
-            historySection.classList.add('show');
-            historyList.innerHTML = summaryHistory.map((item, index) => {
-                // Extract plain text from structured summary for preview
-                const plainTextSummary = item.summary.replace(/^##\s+.+$/gm, '').replace(/^•\s+/gm, '').replace(/\n\n+/g, ' ').trim();
-                const preview = plainTextSummary.substring(0, 100) + (plainTextSummary.length > 100 ? '...' : '');
-                
-                return `
-                    <div class="history-item" onclick="loadHistoryItem(${index})">
-                        <div class="history-item-title">${item.title}</div>
-                        <div class="history-item-summary">${preview}</div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function loadHistoryItem(index) {
-            const item = summaryHistory[index];
-            if (item.isMultiple) {
-                // Handle multiple URLs
-                switchMode('multiple');
-                // Clear existing inputs and add the ones from history
-                urlInputs.innerHTML = '';
-                urlCount = 0;
-                item.urls.forEach(url => {
-                    addUrlInput();
-                    const inputs = document.querySelectorAll('.url-input-multi');
-                    inputs[inputs.length - 1].value = url;
-                });
-                displayMultipleSummary(item.summary, item.title.replace('Combined Summary (', '').replace(')', '').split(', '), item.urls, item.urls.length, item.urls.length);
-            } else {
-                switchMode('single');
-                urlInput.value = item.url;
-                displaySummary(item.summary, item.title, item.url);
-            }
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        function clearAllHistory() {
-            summaryHistory = [];
-            localStorage.removeItem('summaryHistory');
-            updateHistoryDisplay();
-            showToast('History cleared!');
-        }
-
-        // Multi-URL functionality
-        function switchMode(mode) {
-            currentMode = mode;
-            
-            modeButtons.forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.mode === mode);
-            });
-
-            if (mode === 'single') {
-                singleUrlMode.style.display = 'block';
-                multipleUrlMode.style.display = 'none';
-                form.querySelector('input[required]')?.removeAttribute('required');
-                urlInput.setAttribute('required', '');
-            } else {
-                singleUrlMode.style.display = 'none';
-                multipleUrlMode.style.display = 'block';
-                urlInput.removeAttribute('required');
-            }
-            
-            hideError();
-            hideResult();
-        }
-
-        function addUrlInput() {
-            urlCount++;
-            const urlInputRow = document.createElement('div');
-            urlInputRow.className = 'url-input-row';
-            urlInputRow.innerHTML = `
-                <input 
-                    type="url" 
-                    class="form-input url-input-multi"
-                    placeholder="https://en.wikipedia.org/wiki/Article_${urlCount}"
-                    autocomplete="url"
-                >
-                <button type="button" class="btn-remove-url">×</button>
-            `;
-            
-            urlInputs.appendChild(urlInputRow);
-            
-            // Add event listeners
-            const newInput = urlInputRow.querySelector('.url-input-multi');
-            const removeBtn = urlInputRow.querySelector('.btn-remove-url');
-            
-            newInput.addEventListener('input', validateMultipleUrls);
-            newInput.addEventListener('paste', () => setTimeout(validateMultipleUrls, 100));
-            removeBtn.addEventListener('click', () => removeUrlInput(removeBtn));
-            
-            // Update remove button states
-            updateRemoveButtons();
-            validateMultipleUrls();
-        }
-
-        function removeUrlInput(button) {
-            const row = button.parentElement;
-            row.remove();
-            updateRemoveButtons();
-            validateMultipleUrls();
-        }
-
-        function updateRemoveButtons() {
-            const removeButtons = document.querySelectorAll('.btn-remove-url');
-            removeButtons.forEach(btn => {
-                btn.disabled = removeButtons.length <= 1;
-            });
-        }
-
-        function validateMultipleUrls() {
-            const inputs = document.querySelectorAll('.url-input-multi');
-            const validations = [];
-            let validCount = 0;
-            let totalWithContent = 0;
-
-            inputs.forEach((input, index) => {
-                const url = input.value.trim();
-                if (!url) return;
-                
-                totalWithContent++;
-                
-                if (isValidWikipediaUrl(url)) {
-                    validCount++;
-                    input.classList.remove('invalid');
-                    input.classList.add('valid');
-                    validations.push(`<div class="url-status valid">✓ Article ${index + 1}: Valid Wikipedia URL</div>`);
-                } else {
-                    input.classList.remove('valid');
-                    input.classList.add('invalid');
-                    validations.push(`<div class="url-status invalid">⚠️ Article ${index + 1}: Invalid Wikipedia URL</div>`);
-                }
-            });
-
-            if (totalWithContent === 0) {
-                multiUrlValidation.innerHTML = '<div class="url-status">Enter at least one Wikipedia article URL</div>';
-            } else {
-                multiUrlValidation.innerHTML = validations.join('') + 
-                    `<div style="margin-top: var(--spacing-sm); font-weight: 600; color: var(--gray-600);">
-                        ${validCount}/${totalWithContent} valid URLs
-                    </div>`;
-            }
-
-            return { validCount, totalWithContent };
-        }
-
-        function getUrlsFromInputs() {
-            if (currentMode === 'single') {
-                const url = urlInput.value.trim();
-                return url ? [url] : [];
-            } else {
-                const inputs = document.querySelectorAll('.url-input-multi');
-                const urls = [];
-                inputs.forEach(input => {
-                    const url = input.value.trim();
-                    if (url && isValidWikipediaUrl(url)) {
-                        urls.push(url);
-                    }
-                });
-                return urls;
             }
         }
 
         function showLoading() {
-            loading.classList.add('show');
+            loading.style.display = 'flex';
             submitBtn.disabled = true;
             submitText.textContent = 'Processing...';
-            
-            // Reset progress steps
-            document.querySelectorAll('.step-circle').forEach(step => {
-                step.classList.remove('active', 'completed');
-            });
-            
-            // Reset article progress
-            articleProgress.style.display = 'none';
-            articleList.innerHTML = '';
         }
 
         function hideLoading() {
-            loading.classList.remove('show');
+            loading.style.display = 'none';
             submitBtn.disabled = false;
-            submitText.textContent = 'Generate Summary';
-            
-            // Hide article progress
-            articleProgress.style.display = 'none';
+            submitText.textContent = 'Summarize';
         }
 
         function showResult() {
-            // Clear any existing source information
-            const existingSource = document.querySelector('.source-articles');
-            if (existingSource) {
-                existingSource.remove();
-            }
-            
-            // Scroll to result
+            result.style.display = 'block';
             setTimeout(() => {
-                document.getElementById('result').scrollIntoView({ 
-                    behavior: 'smooth', 
-                    block: 'start' 
-                });
+                result.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }, 100);
-            
-            result.classList.add('show');
         }
 
         function hideResult() {
-            result.classList.remove('show');
-            
-            // Also clear source information when hiding result
-            const existingSource = document.querySelector('.source-articles');
-            if (existingSource) {
-                existingSource.remove();
-            }
+            result.style.display = 'none';
         }
 
         function showError(message) {
             document.getElementById('errorMessage').textContent = message;
-            error.classList.add('show');
+            error.style.display = 'block';
+            setTimeout(() => {
+                error.style.display = 'none';
+            }, 5000);
         }
 
         function hideError() {
-            error.classList.remove('show');
+            error.style.display = 'none';
         }
 
         function showToast(message) {
@@ -918,7 +304,7 @@
             toast.classList.add('show');
             setTimeout(() => {
                 toast.classList.remove('show');
-            }, 3000);
+            }, 2000);
         }
     </script>
 </body>
