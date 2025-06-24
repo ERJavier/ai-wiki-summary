@@ -119,12 +119,15 @@
                 const firstAddBtn = firstRow.querySelector('.add-url-btn');
                 if (firstAddBtn) {
                     firstAddBtn.remove();
-                    firstRow.innerHTML += '<button type="button" class="remove-url-btn" onclick="removeUrlInput(this)">×</button>';
+                    // Create and append the remove button instead of using innerHTML +=
+                    const removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'remove-url-btn';
+                    removeBtn.onclick = function() { removeUrlInput(this); };
+                    removeBtn.textContent = '×';
+                    firstRow.appendChild(removeBtn);
                 }
             }
-            
-            // Update remove button states
-            updateRemoveButtons();
             
             // Hide add button if we've reached the maximum
             if (container.querySelectorAll('.url-input-row').length >= 10) {
@@ -152,7 +155,13 @@
                 const removeBtn = lastRow.querySelector('.remove-url-btn');
                 if (removeBtn) {
                     removeBtn.remove();
-                    lastRow.innerHTML += '<button type="button" class="add-url-btn" onclick="addUrlInput()">+ Add More</button>';
+                    // Create and append the add button instead of using innerHTML +=
+                    const addBtn = document.createElement('button');
+                    addBtn.type = 'button';
+                    addBtn.className = 'add-url-btn';
+                    addBtn.onclick = addUrlInput;
+                    addBtn.textContent = '+ Add More';
+                    lastRow.appendChild(addBtn);
                 }
             }
             

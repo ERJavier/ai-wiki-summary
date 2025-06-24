@@ -1,5 +1,142 @@
 // api/summarize.js 
 
+// Advanced content analysis for optimized summarization
+function analyzeContentComplexity(content) {
+    const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    const avgSentenceLength = sentences.reduce((sum, s) => sum + s.length, 0) / sentences.length;
+    const technicalTerms = content.match(/[A-Z][a-z]*(?:\s+[A-Z][a-z]*)*(?:\s+\([^)]+\))?/g) || [];
+    const numericalData = content.match(/\d+(?:,\d{3})*(?:\.\d+)?(?:\s*(?:million|billion|thousand|percent|%|years?|km|miles?))?/gi) || [];
+    
+    return {
+        complexity: avgSentenceLength > 100 ? 'high' : avgSentenceLength > 60 ? 'medium' : 'low',
+        technicalDensity: technicalTerms.length / sentences.length,
+        dataRichness: numericalData.length / sentences.length,
+        contentType: determineContentType(content)
+    };
+}
+
+function determineContentType(content) {
+    const patterns = {
+        biography: /\b(?:born|died|life|career|education|early life|personal|family)\b/gi,
+        history: /\b(?:century|war|battle|empire|dynasty|ancient|medieval|founded|established)\b/gi,
+        science: /\b(?:theory|research|discovery|experiment|hypothesis|molecule|atom|equation)\b/gi,
+        geography: /\b(?:located|climate|population|capital|region|mountain|river|border)\b/gi,
+        technology: /\b(?:developed|invented|software|hardware|algorithm|computer|digital)\b/gi,
+        culture: /\b(?:tradition|festival|art|music|literature|religion|language|custom)\b/gi
+    };
+    
+    let maxScore = 0;
+    let detectedType = 'general';
+    
+    for (const [type, pattern] of Object.entries(patterns)) {
+        const matches = content.match(pattern) || [];
+        const score = matches.length;
+        if (score > maxScore) {
+            maxScore = score;
+            detectedType = type;
+        }
+    }
+    
+    return detectedType;
+}
+
+function extractSemanticClusters(contents) {
+    // Group related topics by semantic similarity
+    const clusters = [];
+    const processed = new Set();
+    
+    for (let i = 0; i < contents.length; i++) {
+        if (processed.has(i)) continue;
+        
+        const cluster = {
+            articles: [contents[i]],
+            indices: [i],
+            theme: determineContentType(contents[i].content),
+            connections: []
+        };
+        
+        // Find related articles
+        for (let j = i + 1; j < contents.length; j++) {
+            if (processed.has(j)) continue;
+            
+            const similarity = calculateContentSimilarity(contents[i].content, contents[j].content);
+            if (similarity > 0.3) {
+                cluster.articles.push(contents[j]);
+                cluster.indices.push(j);
+                processed.add(j);
+            }
+        }
+        
+        clusters.push(cluster);
+        processed.add(i);
+    }
+    
+    return clusters;
+}
+
+function calculateContentSimilarity(content1, content2) {
+    // Simple keyword-based similarity calculation
+    const words1 = new Set(content1.toLowerCase().match(/\b\w{4,}\b/g) || []);
+    const words2 = new Set(content2.toLowerCase().match(/\b\w{4,}\b/g) || []);
+    
+    const intersection = new Set([...words1].filter(word => words2.has(word)));
+    const union = new Set([...words1, ...words2]);
+    
+    return intersection.size / union.size;
+}
+
+function optimizeContentForSummarization(content, maxLength = 8000) {
+    // Enhanced content optimization that preserves key information
+    const paragraphs = content.split('\n\n').filter(p => p.trim().length > 0);
+    const scored = paragraphs.map(paragraph => ({
+        text: paragraph,
+        score: scoreParagraphImportance(paragraph)
+    }));
+    
+    // Sort by importance and select top paragraphs
+    scored.sort((a, b) => b.score - a.score);
+    
+    let optimizedContent = '';
+    let currentLength = 0;
+    
+    for (const para of scored) {
+        if (currentLength + para.text.length > maxLength) break;
+        optimizedContent += para.text + '\n\n';
+        currentLength += para.text.length;
+    }
+    
+    return optimizedContent.trim();
+}
+
+function scoreParagraphImportance(paragraph) {
+    // Score based on multiple factors
+    let score = 0;
+    
+    // Length factor (medium-length paragraphs are often most informative)
+    const length = paragraph.length;
+    if (length > 100 && length < 500) score += 2;
+    else if (length > 50) score += 1;
+    
+    // Key information indicators
+    const keyPatterns = [
+        /\b(?:important|significant|major|key|primary|main|central|crucial)\b/gi,
+        /\b(?:known for|famous for|notable|recognized)\b/gi,
+        /\b(?:established|founded|created|developed|invented)\b/gi,
+        /\d{4}|\d+(?:th|st|nd|rd)\s+century/g, // dates
+        /\b(?:million|billion|thousand)\b/gi, // large numbers
+    ];
+    
+    keyPatterns.forEach(pattern => {
+        const matches = paragraph.match(pattern) || [];
+        score += matches.length;
+    });
+    
+    // Avoid pure lists or very short statements
+    if (paragraph.split(/[.!?]/).length < 2) score -= 1;
+    
+    return score;
+}
+
 async function queryOpenRouter(messages, model) {
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         headers: {
@@ -858,13 +995,202 @@ function finalPolish(summary) {
     // Final cleanup and polish
     summary = summary.replace(/\n{3,}/g, '\n\n');
     summary = summary.replace(/•\s*•/g, '•');
-    summary = summary.replace(/\*\*\s*\*\*/g, '');
+    summary = summary.replace(/\*\s*\*\*/g, '');
     summary = summary.replace(/\s+\n/g, '\n');
     
     return summary.trim();
 }
 
+// Advanced summarization for multiple articles
+async function generateUnifiedSummary(cluster, summaryParams) {
+    const articles = cluster.articles;
+    const theme = cluster.theme;
+    
+    // Combine optimized content from the cluster
+    const combinedContent = articles.map(article => 
+        `Article: ${article.title}\n${article.optimizedContent}`
+    ).join('\n\n---\n\n');
+    
+    const combinedTitle = articles.map(a => a.title).join(', ');
+    
+    const unifiedPrompt = `Create a comprehensive study guide for these related ${theme} topics: ${combinedTitle}
 
+These articles share the common theme of ${theme}. Create a cohesive study guide that:
+
+1. **Synthesizes Information**: Combine related concepts from all articles into unified explanations
+2. **Identifies Connections**: Highlight relationships and interactions between the topics
+3. **Provides Context**: Show how these topics fit together in the broader field of ${theme}
+4. **Maintains Clarity**: Despite covering multiple topics, keep explanations clear and organized
+
+## 🎯 Unified Learning Objectives
+Create learning objectives that span all topics and emphasize their interconnections.
+
+## 📚 Core Concepts Integration
+Merge related concepts from all articles, showing how they build upon or relate to each other.
+
+## 🔗 Cross-Topic Connections
+Explicitly highlight how the topics influence, relate to, or build upon each other.
+
+## 📊 Comparative Analysis
+Where appropriate, compare and contrast similar concepts across the different topics.
+
+## 💡 Synthesized Applications
+Show how the combined knowledge from all topics creates broader applications and understanding.
+
+Content to analyze:
+${combinedContent}
+
+Aim for ${summaryParams.target_words} words of cohesive, integrated content.`;
+
+    return await queryOpenRouterForSummary(unifiedPrompt, summaryParams);
+}
+
+async function generateMultiTopicSummary(clusters, summaryParams) {
+    const totalArticles = clusters.reduce((sum, cluster) => sum + cluster.articles.length, 0);
+    
+    // Create section for each cluster, then a synthesis section
+    const clusterSummaries = await Promise.all(
+        clusters.map(async (cluster) => {
+            if (cluster.articles.length === 1) {
+                // Single article in cluster
+                const article = cluster.articles[0];
+                return {
+                    theme: cluster.theme,
+                    content: await generateSummary(article.optimizedContent, article.title, {
+                        max_tokens: Math.floor(summaryParams.max_tokens / clusters.length),
+                        target_words: `${Math.floor(parseInt(summaryParams.target_words.split('-')[0]) / clusters.length)}-${Math.floor(parseInt(summaryParams.target_words.split('-')[1]) / clusters.length)}`
+                    }),
+                    titles: [article.title]
+                };
+            } else {
+                // Multiple articles in cluster
+                return {
+                    theme: cluster.theme,
+                    content: await generateUnifiedSummary(cluster, {
+                        max_tokens: Math.floor(summaryParams.max_tokens / clusters.length),
+                        target_words: `${Math.floor(parseInt(summaryParams.target_words.split('-')[0]) / clusters.length)}-${Math.floor(parseInt(summaryParams.target_words.split('-')[1]) / clusters.length)}`
+                    }),
+                    titles: cluster.articles.map(a => a.title)
+                };
+            }
+        })
+    );
+    
+    // Create final structured summary
+    const structuredSummary = createStructuredMultiTopicSummary(clusterSummaries, totalArticles);
+    
+    return structuredSummary;
+}
+
+function createStructuredMultiTopicSummary(clusterSummaries, totalArticles) {
+    const themes = clusterSummaries.map(cs => cs.theme);
+    const allTitles = clusterSummaries.flatMap(cs => cs.titles);
+    
+    let summary = `# Comprehensive Study Guide: Multiple Topics\n\n`;
+    summary += `This study guide covers ${totalArticles} articles across ${themes.length} different domains: ${themes.join(', ')}.\n\n`;
+    
+    // Add overview section
+    summary += `## 📋 Overview\n\n`;
+    summary += `**Topics Covered**: ${allTitles.join(', ')}\n\n`;
+    summary += `**Domains**: ${themes.map(theme => `**${theme.charAt(0).toUpperCase() + theme.slice(1)}**`).join(', ')}\n\n`;
+    
+    // Add each cluster's content
+    clusterSummaries.forEach((cluster, index) => {
+        const sectionTitle = cluster.titles.length === 1 
+            ? cluster.titles[0] 
+            : `${cluster.theme.charAt(0).toUpperCase() + cluster.theme.slice(1)} Topics`;
+            
+        summary += `## ${index + 1}. ${sectionTitle}\n\n`;
+        if (cluster.titles.length > 1) {
+            summary += `*Covering: ${cluster.titles.join(', ')}*\n\n`;
+        }
+        summary += cluster.content + '\n\n';
+    });
+    
+    // Add synthesis section if multiple themes
+    if (themes.length > 1) {
+        summary += `## 🔗 Cross-Domain Insights\n\n`;
+        summary += generateCrossDomainInsights(clusterSummaries);
+    }
+    
+    // Add integrated review questions
+    summary += `## ❓ Comprehensive Review Questions\n\n`;
+    summary += generateIntegratedReviewQuestions(clusterSummaries);
+    
+    return summary;
+}
+
+function generateCrossDomainInsights(clusterSummaries) {
+    const themes = clusterSummaries.map(cs => cs.theme);
+    let insights = '';
+    
+    insights += `### Interdisciplinary Connections\n\n`;
+    insights += `• **Methodological Similarities**: How do research and analytical approaches compare across ${themes.join(' and ')}?\n\n`;
+    insights += `• **Historical Patterns**: What common historical trends or patterns emerge across these different domains?\n\n`;
+    insights += `• **Contemporary Relevance**: How do these topics intersect in modern applications and current events?\n\n`;
+    
+    if (themes.includes('science') && themes.includes('technology')) {
+        insights += `• **Science-Technology Interface**: How do scientific principles drive technological innovations in these areas?\n\n`;
+    }
+    
+    if (themes.includes('history') && (themes.includes('culture') || themes.includes('geography'))) {
+        insights += `• **Cultural-Historical Context**: How have historical events shaped cultural and geographical developments?\n\n`;
+    }
+    
+    insights += `### Comparative Analysis Framework\n\n`;
+    insights += `• Compare the scale and scope of impact across different domains\n`;
+    insights += `• Analyze the role of human agency vs. natural forces\n`;
+    insights += `• Evaluate the pace of change and development in each area\n\n`;
+    
+    return insights;
+}
+
+function generateIntegratedReviewQuestions(clusterSummaries) {
+    const themes = clusterSummaries.map(cs => cs.theme);
+    let questions = '';
+    
+    questions += `### Analysis Questions\n\n`;
+    questions += `• How do the methodologies and approaches differ between ${themes.join(', ')} disciplines?\n\n`;
+    questions += `• What are the most significant challenges facing each of these domains today?\n\n`;
+    questions += `• Which topics show the most potential for future development or research?\n\n`;
+    
+    questions += `### Synthesis Questions\n\n`;
+    questions += `• If you had to explain the connections between all these topics to someone unfamiliar with them, what would you emphasize?\n\n`;
+    questions += `• What skills or knowledge from one domain could be applied to enhance understanding in another?\n\n`;
+    questions += `• How might these different fields collaborate to address global challenges?\n\n`;
+    
+    questions += `### Application Questions\n\n`;
+    questions += `• Design a project that would require knowledge from at least two of these domains\n\n`;
+    questions += `• What career paths might benefit from understanding multiple topics covered here?\n\n`;
+    questions += `• How would you prioritize learning these topics based on your personal or professional goals?\n\n`;
+    
+    return questions;
+}
+
+async function queryOpenRouterForSummary(promptText, summaryParams) {
+    const models = [
+        'mistralai/mistral-small-3.2-24b-instruct:free',
+        'microsoft/phi-3.5-mini-instruct:free',
+        'meta-llama/llama-3.2-3b-instruct:free',
+        'qwen/qwen-2.5-coder-32b-instruct:free'
+    ];
+    
+    for (const model of models) {
+        try {
+            const response = await queryOpenRouter([{
+                role: 'user',
+                content: promptText
+            }], model);
+            
+            return response.choices[0].message.content.trim();
+        } catch (error) {
+            console.error(`Error with model ${model}:`, error.message);
+            if (models.indexOf(model) === models.length - 1) {
+                throw error;
+            }
+        }
+    }
+}
 
 async function handleMultipleUrls(req, res) {
     try {
@@ -914,36 +1240,54 @@ async function handleMultipleUrls(req, res) {
             });
         }
 
-        // Combine all content
-        const combinedContent = articles.map(article => {
-            return `## ${article.title}\n\n${article.content}`;
-        }).join('\n\n---\n\n');
+        // Analyze and optimize content for better summarization
+        const analyzedArticles = articles.map(article => ({
+            ...article,
+            analysis: analyzeContentComplexity(article.content),
+            optimizedContent: optimizeContentForSummarization(article.content)
+        }));
 
-        console.log(`Combined content length: ${combinedContent.length} characters`);
+        console.log(`Analyzed ${analyzedArticles.length} articles with content types:`, 
+                    analyzedArticles.map(a => `${a.title}: ${a.analysis.contentType}`));
 
-        // Generate a unified summary
-        const combinedTitle = articles.map(a => a.title).join(', ');
-        
-        // For multiple articles, we need a longer summary to cover all topics
+        // Group articles by semantic similarity and content type
+        const clusters = extractSemanticClusters(analyzedArticles);
+        console.log(`Organized into ${clusters.length} thematic clusters`);
+
+        // For multiple articles, adjust summary parameters based on diversity
         const multiSummaryParams = {
-            max_tokens: Math.min(summaryParams.max_tokens * 1.5, 500),
-            target_words: Math.max(summaryParams.target_words.split('-')[0], 100)
+            max_tokens: Math.min(summaryParams.max_tokens * Math.max(1.2, clusters.length * 0.3), 1200),
+            target_words: `${Math.max(parseInt(summaryParams.target_words.split('-')[0]) * clusters.length * 0.7, 300)}-${Math.max(parseInt(summaryParams.target_words.split('-')[1]) * clusters.length * 0.8, 500)}`
         };
 
         let unifiedSummary;
         try {
-            // Try to generate a unified summary
-            unifiedSummary = await generateSummary(combinedContent, combinedTitle, multiSummaryParams);
+            if (clusters.length === 1 && clusters[0].articles.length > 1) {
+                // Related articles - create a unified thematic summary
+                console.log(`Generating unified summary for ${clusters[0].theme} topics`);
+                unifiedSummary = await generateUnifiedSummary(clusters[0], multiSummaryParams);
+            } else if (clusters.length > 1) {
+                // Mixed topics - create a structured multi-topic summary
+                console.log(`Generating multi-topic summary for ${clusters.length} different themes`);
+                unifiedSummary = await generateMultiTopicSummary(clusters, multiSummaryParams);
+            } else {
+                // Single article or very similar articles
+                const combinedTitle = analyzedArticles.map(a => a.title).join(', ');
+                const combinedContent = analyzedArticles.map(article => 
+                    `## ${article.title}\n\n${article.optimizedContent}`
+                ).join('\n\n---\n\n');
+                unifiedSummary = await generateSummary(combinedContent, combinedTitle, multiSummaryParams);
+            }
         } catch (error) {
-            console.error('Failed to generate unified summary:', error.message);
+            console.error('Failed to generate optimized summary:', error.message);
             
             // Fallback: Generate individual summaries and combine them
             console.log('Falling back to individual summaries...');
             const individualSummaries = [];
             
-            for (const article of articles) {
+            for (const article of analyzedArticles) {
                 try {
-                    const summary = await generateSummary(article.content, article.title, summaryParams);
+                    const summary = await generateSummary(article.optimizedContent, article.title, summaryParams);
                     individualSummaries.push(`**${article.title}:** ${summary}`);
                 } catch (err) {
                     console.error(`Failed to summarize ${article.title}:`, err.message);
@@ -961,7 +1305,23 @@ async function handleMultipleUrls(req, res) {
             successCount: articles.length,
             totalCount: urls.length,
             length: length,
-            wordCount: unifiedSummary.split(/\s+/).length
+            wordCount: unifiedSummary.split(/\s+/).length,
+            analytics: {
+                clusters: clusters.map(cluster => ({
+                    theme: cluster.theme,
+                    articleCount: cluster.articles.length,
+                    titles: cluster.articles.map(a => a.title),
+                    averageComplexity: cluster.articles.reduce((sum, a) => sum + (a.analysis.complexity === 'high' ? 3 : a.analysis.complexity === 'medium' ? 2 : 1), 0) / cluster.articles.length
+                })),
+                contentTypes: analyzedArticles.map(a => ({ title: a.title, type: a.analysis.contentType, complexity: a.analysis.complexity })),
+                optimization: {
+                    totalOriginalLength: articles.reduce((sum, a) => sum + a.content.length, 0),
+                    totalOptimizedLength: analyzedArticles.reduce((sum, a) => sum + a.optimizedContent.length, 0),
+                    compressionRatio: (analyzedArticles.reduce((sum, a) => sum + a.optimizedContent.length, 0) / articles.reduce((sum, a) => sum + a.content.length, 0)).toFixed(2)
+                },
+                summaryStrategy: clusters.length === 1 && clusters[0].articles.length > 1 ? 'unified_thematic' :
+                                clusters.length > 1 ? 'multi_topic_structured' : 'standard_combined'
+            }
         };
 
         if (failedUrls.length > 0) {
