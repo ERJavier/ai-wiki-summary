@@ -19,32 +19,17 @@
         <main class="main-content">
             <div class="input-section">
                 <form id="summarizerForm">
-                    <div class="input-group">
-                        <input 
-                            type="url" 
-                            id="wikipediaUrl" 
-                            class="url-input"
-                            placeholder="Enter Wikipedia article URL"
-                            required
-                        >
+                    <div class="url-inputs-container" id="urlInputsContainer">
+                        <div class="url-input-row">
+                            <input type="url" class="url-input multiple-url" placeholder="Enter Wikipedia article URL" required>
+                            <button type="button" class="add-url-btn" id="addUrlBtn" onclick="addUrlInput()">+ Add More</button>
+                        </div>
+                    </div>
+                    
+                    <div class="submit-section">
                         <button type="submit" class="submit-btn" id="submitBtn">
                             <span id="submitText">Summarize</span>
                         </button>
-                    </div>
-                    
-                    <div class="length-options">
-                        <label class="length-option">
-                            <input type="radio" name="length" value="short" checked>
-                            <span>Brief</span>
-                        </label>
-                        <label class="length-option">
-                            <input type="radio" name="length" value="medium">
-                            <span>Detailed</span>
-                        </label>
-                        <label class="length-option">
-                            <input type="radio" name="length" value="long">
-                            <span>Complete</span>
-                        </label>
                     </div>
                 </form>
             </div>
@@ -81,13 +66,14 @@
     <div id="toast" class="toast">Text copied!</div>
 
     <script>
-        let currentSummaryLength = 'short';
+        let currentSummaryLength = 'long';
 
         // DOM Elements
         const form = document.getElementById('summarizerForm');
-        const urlInput = document.getElementById('wikipediaUrl');
         const submitBtn = document.getElementById('submitBtn');
         const submitText = document.getElementById('submitText');
+        const urlInputsContainer = document.getElementById('urlInputsContainer');
+        const addUrlBtn = document.getElementById('addUrlBtn');
         const loading = document.getElementById('loading');
         const result = document.getElementById('result');
         const error = document.getElementById('error');
@@ -105,15 +91,100 @@
             // Form submission
             form.addEventListener('submit', handleSubmit);
 
-            // Length selection
-            document.querySelectorAll('input[name="length"]').forEach(radio => {
-                radio.addEventListener('change', (e) => {
-                    currentSummaryLength = e.target.value;
-                });
-            });
-
             // Copy button
             copyBtn.addEventListener('click', copySummary);
+        }
+
+        function addUrlInput() {
+            const container = urlInputsContainer;
+            const currentInputs = container.querySelectorAll('.url-input-row');
+            
+            if (currentInputs.length >= 10) {
+                showError('Maximum 10 URLs allowed');
+                return;
+            }
+
+            const newRow = document.createElement('div');
+            newRow.className = 'url-input-row';
+            newRow.innerHTML = `
+                <input type="url" class="url-input multiple-url" placeholder="Wikipedia article URL #${currentInputs.length + 1}" required>
+                <button type="button" class="remove-url-btn" onclick="removeUrlInput(this)">×</button>
+            `;
+            
+            container.appendChild(newRow);
+            
+            // Update the first row to show remove button if this is the second URL
+            if (currentInputs.length === 1) {
+                const firstRow = currentInputs[0];
+                const firstAddBtn = firstRow.querySelector('.add-url-btn');
+                if (firstAddBtn) {
+                    firstAddBtn.remove();
+                    firstRow.innerHTML += '<button type="button" class="remove-url-btn" onclick="removeUrlInput(this)">×</button>';
+                }
+            }
+            
+            // Update remove button states
+            updateRemoveButtons();
+            
+            // Hide add button if we've reached the maximum
+            if (container.querySelectorAll('.url-input-row').length >= 10) {
+                // Move add button to the bottom instead of hiding
+                updateAddButtonPosition();
+            }
+        }
+
+        function removeUrlInput(button) {
+            const row = button.parentElement;
+            const container = urlInputsContainer;
+            const rows = container.querySelectorAll('.url-input-row');
+            
+            // Don't allow removing if only 1 row remains
+            if (rows.length <= 1) {
+                return;
+            }
+            
+            row.remove();
+            
+            // If only one row left, replace remove button with add button
+            const remainingRows = container.querySelectorAll('.url-input-row');
+            if (remainingRows.length === 1) {
+                const lastRow = remainingRows[0];
+                const removeBtn = lastRow.querySelector('.remove-url-btn');
+                if (removeBtn) {
+                    removeBtn.remove();
+                    lastRow.innerHTML += '<button type="button" class="add-url-btn" onclick="addUrlInput()">+ Add More</button>';
+                }
+            }
+            
+            // Update placeholders
+            remainingRows.forEach((row, index) => {
+                const input = row.querySelector('.multiple-url');
+                if (remainingRows.length === 1) {
+                    input.placeholder = 'Enter Wikipedia article URL';
+                } else {
+                    input.placeholder = `Wikipedia article URL #${index + 1}`;
+                }
+            });
+        }
+
+        function updateAddButtonPosition() {
+            // This function can be used to move add button to bottom when needed
+            const container = urlInputsContainer;
+            const addBtn = container.querySelector('.add-url-btn');
+            if (addBtn) {
+                addBtn.remove();
+            }
+            
+            // Add a separate add button below all inputs
+            const submitSection = document.querySelector('.submit-section');
+            if (!document.querySelector('.add-more-btn')) {
+                const newAddBtn = document.createElement('button');
+                newAddBtn.type = 'button';
+                newAddBtn.className = 'add-url-btn add-more-btn';
+                newAddBtn.onclick = addUrlInput;
+                newAddBtn.textContent = '+ Add More URLs';
+                submitSection.insertBefore(newAddBtn, submitBtn);
+            }
         }
 
         function isValidWikipediaUrl(url) {
@@ -128,10 +199,20 @@
         async function handleSubmit(e) {
             e.preventDefault();
             
-            const url = urlInput.value.trim();
+            const urlInputs = document.querySelectorAll('.multiple-url');
+            const urls = Array.from(urlInputs)
+                .map(input => input.value.trim())
+                .filter(url => url); // Remove empty values
             
-            if (!url || !isValidWikipediaUrl(url)) {
-                showError('Please enter a valid Wikipedia article URL');
+            if (urls.length === 0) {
+                showError('Please enter at least one Wikipedia article URL');
+                return;
+            }
+
+            // Validate all URLs
+            const invalidUrls = urls.filter(url => !isValidWikipediaUrl(url));
+            if (invalidUrls.length > 0) {
+                showError(`Please check that all URLs are valid Wikipedia articles. ${invalidUrls.length} invalid URL(s) found.`);
                 return;
             }
 
@@ -140,24 +221,48 @@
             hideResult();
 
             try {
-                const response = await fetch('/api/summarize', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ 
-                        url: url,
-                        length: currentSummaryLength 
-                    })
-                });
-                
-                const data = await response.json();
+                if (urls.length === 1) {
+                    // Handle single URL
+                    const response = await fetch('/api/summarize', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ 
+                            url: urls[0],
+                            length: currentSummaryLength 
+                        })
+                    });
+                    
+                    const data = await response.json();
 
-                if (!response.ok) {
-                    throw new Error(data.error || 'Failed to generate summary');
+                    if (!response.ok) {
+                        throw new Error(data.error || 'Failed to generate summary');
+                    }
+
+                    displaySummary(data.summary, data.title, urls[0]);
+                } else {
+                    // Handle multiple URLs
+                    const response = await fetch('/api/summarize-multiple', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ 
+                            urls: urls,
+                            length: currentSummaryLength 
+                        })
+                    });
+                    
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.error || 'Failed to generate summary');
+                    }
+
+                    displayMultipleSummary(data);
                 }
 
-                displaySummary(data.summary, data.title, url);
                 hideLoading();
 
             } catch (err) {
@@ -183,6 +288,46 @@
             
             // Store for copying
             window.currentSummary = summary;
+            
+            showResult();
+        }
+
+        function displayMultipleSummary(data) {
+            // Set title with multiple articles
+            const titleText = data.titles.length > 3 
+                ? `${data.titles.slice(0, 3).join(', ')} and ${data.titles.length - 3} more articles`
+                : data.titles.join(', ');
+            summaryTitle.textContent = `Combined Summary: ${titleText}`;
+            
+            // Format and display content
+            summaryText.innerHTML = formatSummary(data.summary);
+            
+            // Calculate reading time
+            const words = data.wordCount || data.summary.split(/\s+/).length;
+            const readingTimeMin = Math.ceil(words / 200);
+            readingTime.textContent = `${readingTimeMin} min read`;
+            
+            // Add source links
+            const sourceLinks = data.urls.map((url, index) => 
+                `<a href="${url}" target="_blank">${data.titles[index]}</a>`
+            ).join(' • ');
+            
+            let sourceLinkHtml = `<div class="multiple-sources">
+                <strong>Sources (${data.successCount}/${data.totalCount} articles):</strong><br>
+                ${sourceLinks}
+            </div>`;
+            
+            // Add warnings if any articles failed
+            if (data.warnings && data.warnings.length > 0) {
+                sourceLinkHtml += `<div class="warnings">
+                    <strong>Note:</strong> ${data.totalCount - data.successCount} article(s) could not be processed
+                </div>`;
+            }
+            
+            sourceLink.innerHTML = sourceLinkHtml;
+            
+            // Store for copying
+            window.currentSummary = data.summary;
             
             showResult();
         }
