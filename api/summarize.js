@@ -137,32 +137,122 @@ function scoreParagraphImportance(paragraph) {
     return score;
 }
 
-async function queryOpenRouter(messages, model) {
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        headers: {
-            'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-            'Content-Type': 'application/json',
-            'HTTP-Referer': 'https://localhost:3000', // Optional: for app identification
-            'X-Title': 'AI Wikipedia Summarizer', // Optional: for app identification
-        },
-        method: 'POST',
-        body: JSON.stringify({
-            model: model,
-            messages: messages,
-            temperature: 0.25,
-            max_tokens: 2000,
-            top_p: 0.85,
-            frequency_penalty: 0.3,
-            presence_penalty: 0.2
-        })
-    });
+async function queryOpenRouter(messages, model, retries = 3) {
+    const maxRetries = retries;
+    let lastError;
     
-    if (!response.ok) {
-        const error = await response.text();
-        throw new Error(`OpenRouter API error: ${error}`);
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            console.log(`Attempting OpenRouter API call (attempt ${attempt}/${maxRetries})`);
+            
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 45000); // 45 second timeout
+            
+            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                headers: {
+                    'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                    'Content-Type': 'application/json',
+                    'HTTP-Referer': 'https://localhost:3000',
+                    'X-Title': 'AI Wikipedia Summarizer',
+                },
+                method: 'POST',
+                body: JSON.stringify({
+                    model: model,
+                    messages: messages,
+                    temperature: 0.25,
+                    max_tokens: 2000,
+                    top_p: 0.85,
+                    frequency_penalty: 0.3,
+                    presence_penalty: 0.2
+                }),
+                signal: controller.signal
+            });
+            
+            clearTimeout(timeoutId);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                let errorData;
+                
+                try {
+                    errorData = JSON.parse(errorText);
+                } catch {
+                    errorData = { error: { message: errorText } };
+                }
+                
+                const statusCode = response.status;
+                
+                // Handle different types of API errors
+                if (statusCode === 429) {
+                    const retryAfter = response.headers.get('retry-after') || 60;
+                    const waitTime = Math.min(Math.pow(2, attempt) * 1000, 30000); // Exponential backoff, max 30s
+                    
+                    if (attempt < maxRetries) {
+                        console.warn(`Rate limited. Waiting ${waitTime}ms before retry...`);
+                        await new Promise(resolve => setTimeout(resolve, waitTime));
+                        continue;
+                    }
+                    
+                    throw new Error(`API rate limit exceeded. Please try again in ${retryAfter} seconds.`);
+                } else if (statusCode === 401) {
+                    throw new Error('Invalid API key. Please check your OpenRouter API configuration.');
+                } else if (statusCode === 402) {
+                    throw new Error('Insufficient credits. Please check your OpenRouter account balance.');
+                } else if (statusCode === 503) {
+                    if (attempt < maxRetries) {
+                        const waitTime = Math.pow(2, attempt) * 1000; // Exponential backoff
+                        console.warn(`Service unavailable. Waiting ${waitTime}ms before retry...`);
+                        await new Promise(resolve => setTimeout(resolve, waitTime));
+                        continue;
+                    }
+                    throw new Error('AI service is temporarily unavailable. Please try again later.');
+                } else if (statusCode >= 500) {
+                    if (attempt < maxRetries) {
+                        const waitTime = Math.pow(2, attempt) * 1000;
+                        console.warn(`Server error ${statusCode}. Waiting ${waitTime}ms before retry...`);
+                        await new Promise(resolve => setTimeout(resolve, waitTime));
+                        continue;
+                    }
+                    throw new Error(`AI service error (${statusCode}). Please try again later.`);
+                } else {
+                    const errorMessage = errorData?.error?.message || `HTTP ${statusCode}: ${errorText}`;
+                    throw new Error(`OpenRouter API error: ${errorMessage}`);
+                }
+            }
+            
+            const data = await response.json();
+            
+            // Validate response structure
+            if (!data || !data.choices || !data.choices[0] || !data.choices[0].message) {
+                throw new Error('Invalid response format from AI service');
+            }
+            
+            console.log(`OpenRouter API call successful on attempt ${attempt}`);
+            return data;
+            
+        } catch (error) {
+            lastError = error;
+            
+            if (error.name === 'AbortError') {
+                throw new Error('Request timed out. Please try again with a shorter article.');
+            }
+            
+            if (error.message.includes('API key') || 
+                error.message.includes('credits') || 
+                error.message.includes('Invalid response format')) {
+                throw error; // Don't retry these errors
+            }
+            
+            if (attempt === maxRetries) {
+                console.error(`All ${maxRetries} attempts failed. Last error:`, error.message);
+                throw error;
+            }
+            
+            console.warn(`Attempt ${attempt} failed:`, error.message);
+        }
     }
     
-    return response.json();
+    throw lastError || new Error('Unknown error occurred during API call');
 }
 
 function getSummaryParameters(length) {
@@ -175,53 +265,167 @@ function getSummaryParameters(length) {
     return params[length] || params.short;
 }
 
-async function fetchWikipediaContent(url) {
-    try {
-        // Extract article title from URL
-        const articleTitle = decodeURIComponent(url.split('/wiki/')[1].replace(/_/g, ' '));
-        
-        // Fetch Wikipedia content using Wikipedia API
-        const wikiResponse = await fetch(
-            `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(articleTitle)}`
-        );
-
-        if (!wikiResponse.ok) {
-            if (wikiResponse.status === 404) {
-                throw new Error(`Article "${articleTitle}" not found`);
-            }
-            throw new Error(`Failed to fetch article "${articleTitle}"`);
-        }
-
-        const wikiData = await wikiResponse.json();
-        
-        // Get the full article content for better summarization
-        const contentResponse = await fetch(
-            `https://en.wikipedia.org/w/api.php?action=query&format=json&titles=${encodeURIComponent(articleTitle)}&prop=extracts&exintro=false&explaintext=true&exsectionformat=plain`
-        );
-
-        const contentData = await contentResponse.json();
-        const pages = contentData.query.pages;
-        const pageId = Object.keys(pages)[0];
-        
-        if (pageId === '-1') {
-            throw new Error(`Article "${articleTitle}" not found`);
-        }
-        
-        const fullContent = pages[pageId]?.extract || wikiData.extract;
-
-        if (!fullContent) {
-            throw new Error(`Content for "${articleTitle}" is empty`);
-        }
-
-        return {
-            title: articleTitle,
-            content: fullContent,
-            url: url
-        };
-    } catch (error) {
-        console.error(`Error fetching content for ${url}:`, error.message);
-        throw error;
+async function fetchWikipediaContent(url, retries = 3) {
+    const maxRetries = retries;
+    let lastError;
+    
+    // Validate URL format
+    if (!url || typeof url !== 'string') {
+        throw new Error('Invalid URL provided');
     }
+    
+    if (!url.includes('wikipedia.org/wiki/')) {
+        throw new Error('URL must be a valid Wikipedia article link');
+    }
+    
+    // Extract article title from URL
+    let articleTitle;
+    try {
+        const urlParts = url.split('/wiki/');
+        if (urlParts.length < 2 || !urlParts[1]) {
+            throw new Error('Invalid Wikipedia URL format');
+        }
+        articleTitle = decodeURIComponent(urlParts[1].replace(/_/g, ' '));
+        
+        if (!articleTitle.trim()) {
+            throw new Error('Article title cannot be empty');
+        }
+    } catch (error) {
+        throw new Error(`Failed to extract article title from URL: ${error.message}`);
+    }
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            console.log(`Fetching Wikipedia content for "${articleTitle}" (attempt ${attempt}/${maxRetries})`);
+            
+            // Create timeout controller
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+            
+            // Fetch Wikipedia content using Wikipedia API
+            const wikiResponse = await fetch(
+                `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(articleTitle)}`,
+                { signal: controller.signal }
+            );
+
+            clearTimeout(timeoutId);
+
+            if (!wikiResponse.ok) {
+                if (wikiResponse.status === 404) {
+                    throw new Error(`Article "${articleTitle}" not found on Wikipedia`);
+                } else if (wikiResponse.status === 429) {
+                    if (attempt < maxRetries) {
+                        const waitTime = Math.pow(2, attempt) * 1000;
+                        console.warn(`Wikipedia rate limited. Waiting ${waitTime}ms before retry...`);
+                        await new Promise(resolve => setTimeout(resolve, waitTime));
+                        continue;
+                    }
+                    throw new Error(`Wikipedia rate limit exceeded for "${articleTitle}"`);
+                } else if (wikiResponse.status >= 500) {
+                    if (attempt < maxRetries) {
+                        const waitTime = Math.pow(2, attempt) * 1000;
+                        console.warn(`Wikipedia server error ${wikiResponse.status}. Waiting ${waitTime}ms before retry...`);
+                        await new Promise(resolve => setTimeout(resolve, waitTime));
+                        continue;
+                    }
+                    throw new Error(`Wikipedia server error (${wikiResponse.status}) for "${articleTitle}"`);
+                }
+                throw new Error(`Failed to fetch article "${articleTitle}" (HTTP ${wikiResponse.status})`);
+            }
+
+            const wikiData = await wikiResponse.json();
+            
+            // Validate summary data
+            if (!wikiData || typeof wikiData !== 'object') {
+                throw new Error('Invalid response format from Wikipedia summary API');
+            }
+            
+            // Get the full article content for better summarization
+            const contentController = new AbortController();
+            const contentTimeoutId = setTimeout(() => contentController.abort(), 30000);
+            
+            const contentResponse = await fetch(
+                `https://en.wikipedia.org/w/api.php?action=query&format=json&titles=${encodeURIComponent(articleTitle)}&prop=extracts&exintro=false&explaintext=true&exsectionformat=plain`,
+                { signal: contentController.signal }
+            );
+            
+            clearTimeout(contentTimeoutId);
+
+            if (!contentResponse.ok) {
+                if (contentResponse.status === 429) {
+                    if (attempt < maxRetries) {
+                        const waitTime = Math.pow(2, attempt) * 1000;
+                        console.warn(`Wikipedia content API rate limited. Waiting ${waitTime}ms before retry...`);
+                        await new Promise(resolve => setTimeout(resolve, waitTime));
+                        continue;
+                    }
+                    throw new Error(`Wikipedia content API rate limit exceeded for "${articleTitle}"`);
+                } else if (contentResponse.status >= 500) {
+                    if (attempt < maxRetries) {
+                        const waitTime = Math.pow(2, attempt) * 1000;
+                        console.warn(`Wikipedia content API server error ${contentResponse.status}. Waiting ${waitTime}ms before retry...`);
+                        await new Promise(resolve => setTimeout(resolve, waitTime));
+                        continue;
+                    }
+                    throw new Error(`Wikipedia content API server error (${contentResponse.status}) for "${articleTitle}"`);
+                }
+                throw new Error(`Failed to fetch content for "${articleTitle}" (HTTP ${contentResponse.status})`);
+            }
+
+            const contentData = await contentResponse.json();
+            
+            // Validate content data structure
+            if (!contentData || !contentData.query || !contentData.query.pages) {
+                throw new Error('Invalid response format from Wikipedia content API');
+            }
+            
+            const pages = contentData.query.pages;
+            const pageId = Object.keys(pages)[0];
+            
+            if (pageId === '-1') {
+                throw new Error(`Article "${articleTitle}" not found in content API`);
+            }
+            
+            const fullContent = pages[pageId]?.extract || wikiData.extract;
+
+            if (!fullContent || fullContent.trim().length === 0) {
+                throw new Error(`Content for "${articleTitle}" is empty or unavailable`);
+            }
+
+            console.log(`Successfully fetched Wikipedia content for "${articleTitle}" on attempt ${attempt}`);
+            
+            return {
+                title: articleTitle,
+                content: fullContent,
+                url: url,
+                summary: wikiData.extract || '',
+                description: wikiData.description || ''
+            };
+            
+        } catch (error) {
+            lastError = error;
+            
+            if (error.name === 'AbortError') {
+                throw new Error(`Request timed out while fetching "${articleTitle}". Please try again.`);
+            }
+            
+            // Don't retry certain errors
+            if (error.message.includes('not found') || 
+                error.message.includes('Invalid URL') || 
+                error.message.includes('cannot be empty')) {
+                throw error;
+            }
+            
+            if (attempt === maxRetries) {
+                console.error(`All ${maxRetries} attempts failed for "${articleTitle}". Last error:`, error.message);
+                throw error;
+            }
+            
+            console.warn(`Attempt ${attempt} failed for "${articleTitle}":`, error.message);
+        }
+    }
+    
+         throw lastError || new Error(`Failed to fetch Wikipedia content for "${articleTitle}" after ${maxRetries} attempts`);
 }
 
 async function generateSummary(content, title, summaryParams) {
@@ -230,6 +434,9 @@ async function generateSummary(content, title, summaryParams) {
     const truncatedContent = content.length > maxInputLength 
         ? content.substring(0, maxInputLength) + '...'
         : content;
+
+    // Determine if this is a multiple articles request
+    const isMultipleArticles = title.includes(',');
 
          // Generate summary using OpenRouter
      const models = [
@@ -242,7 +449,6 @@ async function generateSummary(content, title, summaryParams) {
     for (const model of models) {
         try {
             // Create enhanced study guide-focused prompts
-            const isMultipleArticles = title.includes(',');
             let promptText;
             
                          if (isMultipleArticles) {
